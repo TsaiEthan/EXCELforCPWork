@@ -28,8 +28,6 @@ namespace EXCELforCPWork
                 OpenExcelFile(dirPathAppointmentMaintenanceForm, date, month);
             }
             //Console.ReadLine();
-
-
         }
         static void CreateFolder(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm)
         {

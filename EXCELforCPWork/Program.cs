@@ -16,35 +16,36 @@ namespace EXCELforCPWork
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = DateTime.Now.AddMonths(monthToAdd).ToString("MM");
                 string dirPath = @"H:\ChinPoonWork\";
-                string dirPathNewFolder = dirPath + month + "月"; ;
+                string dirPathNewFolder = dirPath + month + "月";
                 string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
-                string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\"; ;
+                string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
+                string dirPathAttachment = dirPathNewFolder + @"\附件\";
 
-                CreateFolder(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm);
+                CreateFolder(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
-                CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm);
+                CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
                 DoMaintenanceFormExcelFile(dirPathMaintenanceForm, date, month);
                 DoAppointmentMaintenanceFormExcelFile(dirPathAppointmentMaintenanceForm, date, month);
             }
             //Console.ReadLine();
         }
-        static void CreateFolder(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm)
+        static void CreateFolder(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
         {
             //建立資料夾，以月份區分
             if (!Directory.Exists(dirPathNewFolder))
             {
                 Directory.CreateDirectory(dirPathNewFolder);
-                Console.WriteLine("資料夾創建成功");
 
-                //建立保養表及後三月預保養資料夾
+                //建立保養表、後三月預保養及附件資料夾
                 Directory.CreateDirectory(dirPathMaintenanceForm);
                 Directory.CreateDirectory(dirPathAppointmentMaintenanceForm);
-                Console.WriteLine("保養表及後三月預保養資料夾創建成功");
+                Directory.CreateDirectory(dirPathAttachment);
+                Console.WriteLine("資料夾創建成功");
             }
         }
 
-        static void CopyFileToNewFolder(string dirPath, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm)
+        static void CopyFileToNewFolder(string dirPath, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
         {
             // 取得資料夾內所有檔案
             FileInfo[] directoryFiles = new FileInfo[] { };

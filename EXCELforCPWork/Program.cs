@@ -24,9 +24,9 @@ namespace EXCELforCPWork
                 CreateFolder(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
-                CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
-                DoMaintenanceFormExcelFile(dirPathMaintenanceForm, date, month);
-                DoAppointmentMaintenanceFormExcelFile(dirPathAppointmentMaintenanceForm, date, month);
+                //CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
+                DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month);
+                DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
             }
             //Console.ReadLine();
         }
@@ -64,27 +64,27 @@ namespace EXCELforCPWork
             }
         }
 
-        static void DoMaintenanceFormExcelFile(string folderPath, DateTime date, string month)
+        static void DoMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
         {
             try
             {
                 //開啟Excel 2003檔案
                 FileInfo[] directoryFiles = new FileInfo[] { };
-                if (Directory.Exists(folderPath))
+                if (Directory.Exists(dirPath))
                 {
                     // 取得資料夾內所有檔案
-                    DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                    DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
                     directoryFiles = directoryInfo.GetFiles("*.xls");
                 }
                 int monthInteger = StringToInt(month);
                 foreach (FileInfo directoryFile in directoryFiles)
                 {
-                    if (File.Exists(folderPath + directoryFile.Name))
+                    if (File.Exists(dirPath + directoryFile.Name))
                     {
                         FileStream file;
                         IWorkbook workBook;
                         ISheet workSheet;
-                        file = new FileStream(folderPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                         Console.WriteLine(directoryFile.Name + "開啟成功");
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
@@ -206,16 +206,16 @@ namespace EXCELforCPWork
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
         }
-        static void DoAppointmentMaintenanceFormExcelFile(string folderPath, DateTime date, string month)
+        static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
         {
             try
             {
                 //開啟Excel 2003檔案
                 FileInfo[] directoryFiles = new FileInfo[] { };
-                if (Directory.Exists(folderPath))
+                if (Directory.Exists(dirPath))
                 {
                     // 取得資料夾內所有檔案
-                    DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                    DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
                     directoryFiles = directoryInfo.GetFiles("*.xls");
                 }
                 int monthInteger = StringToInt(month);
@@ -230,12 +230,12 @@ namespace EXCELforCPWork
                 string monthAddThree = (monthAdd[2]).ToString();
                 foreach (FileInfo directoryFile in directoryFiles)
                 {
-                    if (File.Exists(folderPath + directoryFile.Name))
+                    if (File.Exists(dirPath + directoryFile.Name))
                     {
                         FileStream file;
                         IWorkbook workBook;
                         ISheet workSheet;
-                        file = new FileStream(folderPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                         Console.WriteLine(directoryFile.Name + "開啟成功");
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);

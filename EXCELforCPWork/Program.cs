@@ -15,7 +15,8 @@ namespace EXCELforCPWork
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = DateTime.Now.AddMonths(monthToAdd).ToString("MM");
-                string dirPath = @"H:\ChinPoonWork\";
+                //string dirPath = @"H:\ChinPoonWork\";
+                string dirPath = System.IO.Directory.GetCurrentDirectory() + @"\";
                 string dirPathNewFolder = dirPath + month + "月";
                 string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
                 string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
@@ -149,7 +150,8 @@ namespace EXCELforCPWork
                         for (int i = 3; i < workSheet.LastRowNum - 1; i++)
                         {
                             //表格中增加逗號
-                            if (workSheet.GetRow(i).GetCell(4).ToString() == "感測值≧500")
+                            if (workSheet.GetRow(i).GetCell(4) != null
+                                && workSheet.GetRow(i).GetCell(4).ToString() == "感測值≧500")
                             {
                                 workSheet.GetRow(i).GetCell(7).SetCellValue(",");
                             }

@@ -118,10 +118,10 @@ namespace EXCELforCPWork
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
 
-                        HSSFCellStyle cellStyle1 = (HSSFCellStyle)workBook.CreateCellStyle();
+                        ICellStyle cellStyle = workBook.CreateCellStyle();
                         //置中的Style
-                        cellStyle1.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                        cellStyle1.VerticalAlignment = VerticalAlignment.Center;
+                        cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                        cellStyle.VerticalAlignment = VerticalAlignment.Center;
                         IFont font = workBook.CreateFont();
                         //字型
                         font.FontName = "Times New Roman";
@@ -129,7 +129,7 @@ namespace EXCELforCPWork
                         font.FontHeightInPoints = 16;
                         //字體粗體
                         font.IsBold = true;
-                        cellStyle1.SetFont(font);
+                        cellStyle.SetFont(font);
 
                         IFont font2 = workBook.CreateFont();
                         //字型
@@ -141,7 +141,7 @@ namespace EXCELforCPWork
 
                         //填入保養月份
                         workSheet.GetRow(1).GetCell(3).SetCellValue(month);
-                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle1;
+                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle;
 
                         //填入執行日期
                         workSheet.GetRow(1).GetCell(8).SetCellValue(date.ToString("yyyy   /    M    /     "));
@@ -149,6 +149,11 @@ namespace EXCELforCPWork
 
                         for (int i = 3; i < workSheet.LastRowNum - 1; i++)
                         {
+                            if (workSheet.GetRow(i).GetCell(6) == null)
+                            {
+                                workSheet.GetRow(i).CreateCell(6).SetCellValue("");
+                            }
+                                                       
                             //表格中增加逗號
                             if (workSheet.GetRow(i).GetCell(4) != null
                                 && workSheet.GetRow(i).GetCell(4).ToString() == "感測值≧500")
@@ -156,13 +161,14 @@ namespace EXCELforCPWork
                                 workSheet.GetRow(i).GetCell(7).SetCellValue(",");
                             }
                             string[] maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
+                            maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
                             int x1 = 0;
                             int x2 = 0;
                             //單個月分圈起的位置
                             if (maintenanceMonths.Length == 1 && maintenanceMonths[0] == month)
                             {
-                                x1 = 422;
-                                x2 = 602;
+                                x1 = 430;
+                                x2 = 610;
                                 DrowingCircle(true, workBook, workSheet, i, x1, x2);
                             }
                             else if (maintenanceMonths.Length == 2)
@@ -203,8 +209,8 @@ namespace EXCELforCPWork
                                 //四個月分圈起的位置(位置4)
                                 else if (monthInteger >= 10 && maintenanceMonths[3] == month)
                                 {
-                                    x1 = 590;
-                                    x2 = 770;
+                                    x1 = 610;
+                                    x2 = 790;
                                 }
 
                             }
@@ -218,6 +224,8 @@ namespace EXCELforCPWork
                             {
                                 DrowingLine(workSheet, i);
                             }
+                            if(workSheet.GetRow(i).GetCell(6).ToString() != "")
+                                SetCellStyle(workBook, workSheet, i);
                         }
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
@@ -234,6 +242,24 @@ namespace EXCELforCPWork
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
+        }
+        static void SetCellStyle(IWorkbook workBook, ISheet workSheet, int i)
+        {
+            ICellStyle cellStyleOriginal = workBook.CreateCellStyle();
+            //置中的Style
+            cellStyleOriginal.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+            cellStyleOriginal.VerticalAlignment = VerticalAlignment.Center;
+            //下邊框
+            cellStyleOriginal.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            IFont fontOriginal = workBook.CreateFont();
+            //字型
+            fontOriginal.FontName = "Times New Roman";
+            //字體尺寸
+            fontOriginal.FontHeightInPoints = 14;
+            //字體粗體
+            fontOriginal.IsBold = false;
+            cellStyleOriginal.SetFont(fontOriginal);
+            workSheet.GetRow(i).GetCell(6).CellStyle = cellStyleOriginal;
         }
         static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
         {
@@ -269,10 +295,10 @@ namespace EXCELforCPWork
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
 
-                        HSSFCellStyle cellStyle1 = (HSSFCellStyle)workBook.CreateCellStyle();
+                        ICellStyle cellStyle2 = workBook.CreateCellStyle();
                         //置中的Style
-                        cellStyle1.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                        cellStyle1.VerticalAlignment = VerticalAlignment.Center;
+                        cellStyle2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                        cellStyle2.VerticalAlignment = VerticalAlignment.Center;
                         IFont font = workBook.CreateFont();
                         //字型
                         font.FontName = "Times New Roman";
@@ -280,7 +306,7 @@ namespace EXCELforCPWork
                         font.FontHeightInPoints = 16;
                         //字體粗體
                         font.IsBold = true;
-                        cellStyle1.SetFont(font);
+                        cellStyle2.SetFont(font);
 
                         IFont font2 = workBook.CreateFont();
                         //字型
@@ -292,7 +318,7 @@ namespace EXCELforCPWork
 
                         //填入保養月份
                         workSheet.GetRow(1).GetCell(3).SetCellValue(month);
-                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle1;
+                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle2;
 
                         //填入預保養執行日期
                         DateTime lastWorkDate = date.AddMonths(1).AddDays(-DateTime.Now.Day);
@@ -308,7 +334,11 @@ namespace EXCELforCPWork
                         workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
 
                         for (int i = 3; i < workSheet.LastRowNum - 1; i++)
-                        {
+                        {                            
+                            if (workSheet.GetRow(i).GetCell(6) == null)
+                            {
+                                workSheet.GetRow(i).CreateCell(6).SetCellValue("");
+                            }
                             string[] maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
                             int x1 = 0;
                             int x2 = 0;
@@ -317,8 +347,8 @@ namespace EXCELforCPWork
                             {
                                 if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
                                 {
-                                    x1 = 422;
-                                    x2 = 602;
+                                    x1 = 430;
+                                    x2 = 610;
                                     DrowingCircle(false, workBook, workSheet, i, x1, x2);
                                 }
                             }
@@ -377,8 +407,8 @@ namespace EXCELforCPWork
                                 {
                                     if (StringToInt(maintenanceMonths[3]) >= 10)
                                     {
-                                        x1 = 590;
-                                        x2 = 770;
+                                        x1 = 610;
+                                        x2 = 790;
                                     }
                                 }
                             }
@@ -392,8 +422,9 @@ namespace EXCELforCPWork
                             {
                                 DrowingLine(workSheet, i);
                             }
+                            if (workSheet.GetRow(i).GetCell(6).ToString() != "")
+                                SetCellStyle(workBook, workSheet, i);
                         }
-                        //Console.WriteLine("Excel檔案讀取完成，Sheet：" + workSheet.SheetName);
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
                         workBook.Close();

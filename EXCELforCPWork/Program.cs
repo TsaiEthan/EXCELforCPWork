@@ -20,12 +20,16 @@ namespace EXCELforCPWork
                 string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
                 string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
                 string dirPathAttachment = dirPathNewFolder + @"\附件\";
-
+                //產生需要的資料夾
                 CreateFolder(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
                 //CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
+                //獲取月份第一日是星期幾
+                DayOfWeek firstDay = MonthFirstDayInWeek(date);
+                //製作保養表
                 DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month);
+                //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
             }
             //Console.ReadLine();
@@ -42,6 +46,30 @@ namespace EXCELforCPWork
                 Directory.CreateDirectory(dirPathAppointmentMaintenanceForm);
                 Directory.CreateDirectory(dirPathAttachment);
                 Console.WriteLine("資料夾創建成功");
+            }
+        }
+
+        static DayOfWeek MonthFirstDayInWeek(DateTime date)
+        {
+            DateTime monthFirstDay = date.AddDays(-DateTime.Now.Day + 1);
+            switch (monthFirstDay.DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    return DayOfWeek.Monday;
+                case DayOfWeek.Tuesday:
+                    return DayOfWeek.Tuesday;
+                case DayOfWeek.Wednesday:
+                    return DayOfWeek.Wednesday;
+                case DayOfWeek.Thursday:
+                    return DayOfWeek.Thursday;
+                case DayOfWeek.Friday:
+                    return DayOfWeek.Friday;
+                case DayOfWeek.Saturday:
+                    return DayOfWeek.Saturday;
+                case DayOfWeek.Sunday:
+                    return DayOfWeek.Sunday;
+                default:
+                    return DayOfWeek.Monday;
             }
         }
 
@@ -189,7 +217,6 @@ namespace EXCELforCPWork
                                 DrowingLine(workSheet, i);
                             }
                         }
-                        //Console.WriteLine("Excel檔案讀取完成，Sheet：" + workSheet.SheetName);
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
                         workBook.Close();

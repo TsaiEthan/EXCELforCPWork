@@ -27,7 +27,14 @@ namespace EXCELforCPWork
                     month = month.Remove(0, 1);
                 //CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
                 //獲取月份第一日是星期幾
-                DayOfWeek firstDay = MonthFirstDayInWeek(date);
+                DateTime monthFirstDay;
+                DateTime monthLastDay;
+                int daysOfMonth;
+                DayOfWeek firstDay = MonthFirstDayInWeek(date, out monthFirstDay, out monthLastDay, out daysOfMonth);
+                
+
+                Console.WriteLine(firstDay.ToString());
+                Console.ReadLine();
                 //製作保養表
                 DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month);
                 //製作預保養表
@@ -50,9 +57,14 @@ namespace EXCELforCPWork
             }
         }
 
-        static DayOfWeek MonthFirstDayInWeek(DateTime date)
+        static DayOfWeek MonthFirstDayInWeek(DateTime date, out DateTime monthFirstDay, out DateTime monthLastDay, out int daysOfMonth)
         {
-            DateTime monthFirstDay = date.AddDays(-DateTime.Now.Day + 1);
+            monthFirstDay = date.AddDays(-DateTime.Now.Day + 1);
+            monthLastDay = date.AddMonths(1).AddDays(-DateTime.Now.Day);
+            //兩時間天數相減
+            TimeSpan ts = monthLastDay.Subtract(monthFirstDay);
+            //相距天數
+            daysOfMonth = ts.Days; 
             switch (monthFirstDay.DayOfWeek)
             {
                 case DayOfWeek.Monday:

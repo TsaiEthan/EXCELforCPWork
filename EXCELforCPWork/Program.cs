@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
+using NPOI.SS.Util;
 using System.IO;
 
 namespace EXCELforCPWork
@@ -14,7 +15,7 @@ namespace EXCELforCPWork
             for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
-                string month = DateTime.Now.AddMonths(monthToAdd).ToString("MM");
+                string month = date.ToString("MM");
                 //string dirPath = @"H:\ChinPoonWork\";
                 string dirPath = System.IO.Directory.GetCurrentDirectory() + @"\";
                 string dirPathNewFolder = dirPath + month + "月";
@@ -26,21 +27,13 @@ namespace EXCELforCPWork
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
                 //CopyFileToNewFolder(dirPath, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
-                //獲取月份第一日是星期幾
-                DateTime monthFirstDay;
-                DateTime monthLastDay;
-                int daysOfMonth;
-                DayOfWeek firstDay = MonthFirstDayInWeek(date, out monthFirstDay, out monthLastDay, out daysOfMonth);
-                
 
-                Console.WriteLine(firstDay.ToString());
-                Console.ReadLine();
                 //製作保養表
                 DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month);
                 //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
             }
-            //Console.ReadLine();
+            Console.ReadLine();
         }
         static void CreateFolder(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
         {
@@ -55,36 +48,7 @@ namespace EXCELforCPWork
                 Directory.CreateDirectory(dirPathAttachment);
                 Console.WriteLine("資料夾創建成功");
             }
-        }
-
-        static DayOfWeek MonthFirstDayInWeek(DateTime date, out DateTime monthFirstDay, out DateTime monthLastDay, out int daysOfMonth)
-        {
-            monthFirstDay = date.AddDays(-DateTime.Now.Day + 1);
-            monthLastDay = date.AddMonths(1).AddDays(-DateTime.Now.Day);
-            //兩時間天數相減
-            TimeSpan ts = monthLastDay.Subtract(monthFirstDay);
-            //相距天數
-            daysOfMonth = ts.Days; 
-            switch (monthFirstDay.DayOfWeek)
-            {
-                case DayOfWeek.Monday:
-                    return DayOfWeek.Monday;
-                case DayOfWeek.Tuesday:
-                    return DayOfWeek.Tuesday;
-                case DayOfWeek.Wednesday:
-                    return DayOfWeek.Wednesday;
-                case DayOfWeek.Thursday:
-                    return DayOfWeek.Thursday;
-                case DayOfWeek.Friday:
-                    return DayOfWeek.Friday;
-                case DayOfWeek.Saturday:
-                    return DayOfWeek.Saturday;
-                case DayOfWeek.Sunday:
-                    return DayOfWeek.Sunday;
-                default:
-                    return DayOfWeek.Monday;
-            }
-        }
+        }        
 
         static void CopyFileToNewFolder(string dirPath, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
         {
@@ -118,6 +82,12 @@ namespace EXCELforCPWork
                     directoryFiles = directoryInfo.GetFiles("*.xls");
                 }
                 int monthInteger = StringToInt(month);
+
+                //獲取月份第一日及天數
+                DateTime monthFirstDay;
+                int daysOfMonth;
+                MonthFirstDayAndDays(date, out monthFirstDay, out daysOfMonth);
+
                 foreach (FileInfo directoryFile in directoryFiles)
                 {
                     if (File.Exists(dirPath + directoryFile.Name))
@@ -129,6 +99,8 @@ namespace EXCELforCPWork
                         Console.WriteLine(directoryFile.Name + "開啟成功");
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
+                        //抓取表單的名子
+                        string[] formName = directoryFile.Name.Split('-');
 
                         ICellStyle cellStyle = workBook.CreateCellStyle();
                         //置中的Style
@@ -155,8 +127,86 @@ namespace EXCELforCPWork
                         workSheet.GetRow(1).GetCell(3).SetCellValue(month);
                         workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle;
 
+                        //根據不同線別選定保養日期
+                        List<DateTime> executionDate = new List<DateTime>() { };
+                        switch (formName[0])
+                        {
+                            //DESMEAR#3，第1個星期四保
+                            case "G01":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
+                                break;
+                            //DESMEAR#4，第2個星期四保
+                            case "G02":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
+                                break;
+                            //DESMEAR#5，第3個星期四保
+                            case "G03":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Thursday");
+                                break;
+                            //DUBURR#1，第3個星期五保
+                            case "G04":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Friday");
+                                break;
+                            //PTH#4，第2個星期三保
+                            case "G22":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Wednesday");
+                                break;                                
+                            //PTH#5，第2個星期一保
+                            case "G05":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
+                                break;
+                            //水5，第2個星期一保
+                            case "G07":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
+                                break;
+                            //PTH#6，第2個星期二保
+                            case "G06":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
+                                break;
+                            //水6，第2個星期二保
+                            case "G08":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
+                                break;
+                            //水7，第1個星期四保
+                            case "G09":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
+                                break;
+                            //水8，第1個星期一保
+                            case "G10":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Monday");
+                                break;
+                            //水9，第2個星期四保
+                            case "G11":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
+                                break;
+                            //水10，第1個星期三保
+                            case "G12":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Wednesday");
+                                break;
+                            //雷射孔微蝕#2，第3個星期二保
+                            case "G13":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
+                                break;
+                            //文坦讀孔機，第2個星期日保
+                            case "G18":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Sunday");
+                                break;
+                            //水11，第1個星期二保
+                            case "G24":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Tuesday");
+                                break;
+                            //水12，第1個星期五保
+                            case "G25":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Friday");
+                                break;
+                            //PLASMA，第2個星期五保
+                            case "G26":
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
+                                break;
+                        }
+
                         //填入執行日期
-                        workSheet.GetRow(1).GetCell(8).SetCellValue(date.ToString("yyyy   /    M    /     "));
+                        workSheet.GetRow(1).GetCell(8).SetCellValue(executionDate[0].ToString("yyyy   /    M    /    d"));
                         workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
 
                         for (int i = 3; i < workSheet.LastRowNum - 1; i++)
@@ -181,7 +231,7 @@ namespace EXCELforCPWork
                             {
                                 x1 = 430;
                                 x2 = 610;
-                                DrowingCircle(true, workBook, workSheet, i, x1, x2);
+                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0);
                             }
                             else if (maintenanceMonths.Length == 2)
                             {
@@ -224,12 +274,11 @@ namespace EXCELforCPWork
                                     x1 = 610;
                                     x2 = 790;
                                 }
-
                             }
                             //表格中圈起保養月及畫刪除線
                             if (x1 != 0 && x2 != 0)
                             {
-                                DrowingCircle(true, workBook, workSheet, i, x1, x2);
+                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0);
                             }
                             else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
                                     && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
@@ -238,6 +287,25 @@ namespace EXCELforCPWork
                             }
                             if(workSheet.GetRow(i).GetCell(6).ToString() != "")
                                 SetCellStyle(workBook, workSheet, i);
+                        }
+
+                        //文坦讀孔機
+                        if(formName[0] == "G18")
+                        {                           
+                            MachineCodeDrowingCircle("G19", 700, 1000, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G20", 15, 245, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G21", 315, 545, workBook, folderPath, directoryFile);
+                            //For G18
+                            DrowingCircle(false, workBook, workSheet, 28, 315, 615, 18);
+                        }
+                        //PLASMA
+                        else if (formName[0] == "G26")
+                        {
+                            MachineCodeDrowingCircle("G28", 400, 630, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G29", 710, 940, workBook, folderPath, directoryFile);
+                            //For G26
+                            DrowingCircle(false, workBook, workSheet, 28, 80, 310, 26);
+                            DrowingCircle(false, workBook, workSheet, 1, 315, 373, 26);
                         }
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
@@ -254,6 +322,30 @@ namespace EXCELforCPWork
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
+        }
+        static void MonthFirstDayAndDays(DateTime date, out DateTime monthFirstDay, out int daysOfMonth)
+        {
+            monthFirstDay = date.AddDays(-DateTime.Now.Day + 1);
+            DateTime monthLastDay = date.AddMonths(1).AddDays(-DateTime.Now.Day);
+            //兩時間天數相減
+            TimeSpan ts = monthLastDay.Subtract(monthFirstDay);
+            //相距天數
+            daysOfMonth = ts.Days;
+        }
+
+        static List<DateTime> DateToWeekDay(DateTime monthFirstDay, int daysOfMonth, int whichWeek, string whatDayIsIt)
+        {
+            List<DateTime> executionDate = new List<DateTime>() { };
+            executionDate.Add(new DateTime());
+            for (int i = 0; i <= daysOfMonth; i++)
+            {
+                if (monthFirstDay.AddDays(i).DayOfWeek.ToString() == whatDayIsIt)
+                {
+                    executionDate.Add(monthFirstDay.AddDays(i));
+                }
+            }
+            executionDate[0] = executionDate[whichWeek];
+            return executionDate;
         }
         static void SetCellStyle(IWorkbook workBook, ISheet workSheet, int i)
         {
@@ -272,6 +364,26 @@ namespace EXCELforCPWork
             fontOriginal.IsBold = false;
             cellStyleOriginal.SetFont(fontOriginal);
             workSheet.GetRow(i).GetCell(6).CellStyle = cellStyleOriginal;
+        }
+        static void MachineCodeDrowingCircle(string machineCode, int x3, int x4, IWorkbook workBook, string folderPath, FileInfo directoryFile)
+        {
+            int machineCodeNumber = StringToInt(machineCode.Substring(1,2));
+            ISheet workSheet = workBook.GetSheetAt(0);
+            HSSFPatriarch circle = DrowingCircle(false, workBook, workSheet, 28, x3, x4, machineCodeNumber);
+            HSSFPatriarch circle2 = (HSSFPatriarch)workSheet.CreateDrawingPatriarch();
+            if (machineCodeNumber == 28)
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 370, 428, machineCodeNumber);
+            else if(machineCodeNumber == 29)
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 425, 483, machineCodeNumber);
+            FileStream newFile = new FileStream(folderPath + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
+            workBook.Write(newFile);
+            circle.Clear();
+            if (machineCodeNumber == 28 || machineCodeNumber == 29) 
+                circle2.Clear();
+        }
+        static void DoCurrentCheckForm(FileInfo directoryFile)
+        {
+            //directoryFile.Name;
         }
         static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
         {
@@ -329,7 +441,7 @@ namespace EXCELforCPWork
                         font2.IsBold = false;
 
                         //填入保養月份
-                        workSheet.GetRow(1).GetCell(3).SetCellValue(month);
+                        workSheet.GetRow(1).GetCell(3).SetCellValue(monthAddOne + "、" + monthAddTwo + "、" + monthAddThree);
                         workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle2;
 
                         //填入預保養執行日期
@@ -361,7 +473,7 @@ namespace EXCELforCPWork
                                 {
                                     x1 = 430;
                                     x2 = 610;
-                                    DrowingCircle(false, workBook, workSheet, i, x1, x2);
+                                    DrowingCircle(false, workBook, workSheet, i, x1, x2, 0);
                                 }
                             }
                             else if (maintenanceMonths.Length == 2)
@@ -427,7 +539,7 @@ namespace EXCELforCPWork
                             //表格中圈起保養月及畫刪除線
                             if (x1 != 0 && x2 != 0)
                             {
-                                DrowingCircle(false, workBook, workSheet, i, x1, x2);
+                                DrowingCircle(false, workBook, workSheet, i, x1, x2, 0);
                             }
                             else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
                                     && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
@@ -453,11 +565,24 @@ namespace EXCELforCPWork
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
         }
-        static void DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2)
+        static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber)
         {
+            int initial = 6;
+            if(machineCodeNumber == 18 || machineCodeNumber == 19)
+            {
+                initial = 8;
+            }
+            else if (machineCodeNumber == 20 || machineCodeNumber == 21
+                     || machineCodeNumber == 26 || machineCodeNumber == 28 || machineCodeNumber == 29)
+            {
+                if(i == 28)
+                    initial = 9;
+                else
+                    initial = 1;
+            }
             //儲存格畫圈
             HSSFPatriarch patriarchCircle = (HSSFPatriarch)workSheet.CreateDrawingPatriarch();
-            HSSFClientAnchor c1 = new HSSFClientAnchor(x1, 30, x2, 226, 6, i, 6, i);
+            HSSFClientAnchor c1 = new HSSFClientAnchor(x1, 30, x2, 226, initial, i, initial, i);
             HSSFSimpleShape circle1 = patriarchCircle.CreateSimpleShape(c1);
             circle1.ShapeType = HSSFSimpleShape.OBJECT_TYPE_OVAL;
             circle1.LineStyle = HSSFShape.LINESTYLE_SOLID;
@@ -478,26 +603,21 @@ namespace EXCELforCPWork
                     workSheet.GetRow(i).GetCell(7).CellStyle.SetFont(font);
                 }
             }
+            return patriarchCircle;
         }
         static void DrowingLine(ISheet workSheet, int i)
         {
             //儲存格畫斜線
-            HSSFPatriarch patriarch1 = (HSSFPatriarch)workSheet.CreateDrawingPatriarch();
-            HSSFClientAnchor a1 = new HSSFClientAnchor(0, 0, 0, 0, 7, i, 7 + 1, i + 1);
-            HSSFSimpleShape line1 = patriarch1.CreateSimpleShape(a1);
-            line1.ShapeType = HSSFSimpleShape.OBJECT_TYPE_LINE;
-            line1.LineStyle = HSSFShape.LINESTYLE_SOLID;
-            // 在NPOI中線的寬度12700表示1pt,所以這裡是0.5pt粗的線條。
-            line1.LineWidth = 6350;
-
-            //儲存格畫斜線
-            HSSFPatriarch patriarch2 = (HSSFPatriarch)workSheet.CreateDrawingPatriarch();
-            HSSFClientAnchor a2 = new HSSFClientAnchor(0, 0, 0, 0, 8, i, 8 + 1, i + 1);
-            HSSFSimpleShape line2 = patriarch2.CreateSimpleShape(a2);
-            line2.ShapeType = HSSFSimpleShape.OBJECT_TYPE_LINE;
-            line2.LineStyle = HSSFShape.LINESTYLE_SOLID;
-            // 在NPOI中線的寬度12700表示1pt,所以這裡是0.5pt粗的線條。
-            line2.LineWidth = 6350;
+            for (int j = 7; j < 9; j++)
+            {
+                HSSFPatriarch patriarch1 = (HSSFPatriarch)workSheet.CreateDrawingPatriarch();
+                HSSFClientAnchor a1 = new HSSFClientAnchor(0, 0, 0, 0, j, i, j + 1, i + 1);
+                HSSFSimpleShape line1 = patriarch1.CreateSimpleShape(a1);
+                line1.ShapeType = HSSFSimpleShape.OBJECT_TYPE_LINE;
+                line1.LineStyle = HSSFShape.LINESTYLE_SOLID;
+                // 在NPOI中線的寬度12700表示1pt,所以這裡是0.5pt粗的線條。
+                line1.LineWidth = 6350;
+            }
         }
         static int StringToInt(string stringForChange)
         {

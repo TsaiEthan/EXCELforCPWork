@@ -98,8 +98,7 @@ namespace EXCELforCPWork
                         FileStream file;
                         IWorkbook workBook;
                         ISheet workSheet;
-                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                        Console.WriteLine(directoryFile.Name + "開啟成功");
+                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);                        
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
                         
@@ -233,71 +232,72 @@ namespace EXCELforCPWork
                             case "G04":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Friday");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G04", "DEBURR#1");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G04", "DEBURR#1");
                                 break;
                             //PTH#4，第2個星期三保
                             case "G22":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Wednesday");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G22", "PTH#4");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G22", "PTH#4");
                                 break;
                             //PTH#5，第2個星期一保
                             case "G05":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G05", "PTH#5");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G05", "PTH#5");
                                 break;
                             //水5，第2個星期一保
                             case "G07":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G07", "水5");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G07", "水5");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G07", "水5");
                                 break;
                             //PTH#6，第2個星期二保
                             case "G06":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G06", "PTH#6");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G06", "PTH#6");
                                 break;
                             //水6，第2個星期二保
                             case "G08":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G08", "水6");
                                 if(heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G08", "水6");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G08", "水6");
                                 break;
                             //水7，第1個星期四保
                             case "G09":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G09", "水7");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G09", "水7");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G09", "水7");
                                 break;
                             //水8，第1個星期一保
                             case "G10":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Monday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G10", "水8");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G10", "水8");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G10", "水8");
                                 break;
                             //水9，第2個星期四保
                             case "G11":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G11", "水9");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G11", "水9");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G11", "水9");
                                 break;
                             //水10，第1個星期三保
                             case "G12":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Wednesday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G12", "水10");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G12", "水10");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G12", "水10");
                                 break;
                             //雷射孔微蝕#2，第3個星期二保
                             case "G13":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
+                                DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
                                 break;
                             //文坦讀孔機，第2個星期日保
                             case "G18":
@@ -308,14 +308,14 @@ namespace EXCELforCPWork
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Tuesday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G24", "水11");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G24", "水11");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G24", "水11");
                                 break;
                             //水12，第1個星期五保
                             case "G25":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Friday");
                                 DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G25", "水12");
                                 if (heaterCheck)
-                                    DoForm_A02A03A04(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G25", "水12");
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G25", "水12");
                                 break;
                             //PLASMA，第2個星期五保
                             case "G26":
@@ -346,6 +346,7 @@ namespace EXCELforCPWork
                         }
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
+                        Console.WriteLine(directoryFile.Name + "寫入成功");
                         workBook.Close();
                         file.Close();
                     }
@@ -425,8 +426,7 @@ namespace EXCELforCPWork
             FileStream file;
             IWorkbook workBook;
             ISheet workSheet;
-            file = new FileStream(dirPath + directoryAFiles[0].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            Console.WriteLine(directoryAFiles[0].Name + "開啟成功");
+            file = new FileStream(dirPath + directoryAFiles[0].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);            
             workBook = new HSSFWorkbook(file);
             workSheet = workBook.GetSheetAt(0);
 
@@ -468,70 +468,80 @@ namespace EXCELforCPWork
 
             file = new FileStream(dirPathAttachment + "A0-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
             workBook.Write(file);
+            Console.WriteLine(directoryAFiles[0].Name + "寫入成功");
             workBook.Close();
             file.Close();
         }
-        static void DoForm_A02A03A04(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
+        static void DoForm_A02ToA06(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
             FileStream file;
             IWorkbook workBook = null;
             ISheet workSheet;
-            
+            string openPath = "", writePath = "", fileName = "";
+            string openPath2 = "", writePath2 = "", fileName2 = "";
             //FOR DEBURR#1
             if (lineName == "DEBURR#1")
             {
-                file = new FileStream(dirPath + directoryAFiles[4].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                Console.WriteLine(directoryAFiles[4].Name + "開啟成功");
-                workBook = new HSSFWorkbook(file);
-                workSheet = workBook.GetSheetAt(0);
-
-                workSheet.GetRow(2).GetCell(0).SetCellValue("設備名稱:" + lineName);
-                workSheet.GetRow(2).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("yyyy   /    M    /   dd"));
-
-                file = new FileStream(dirPathAttachment + "A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls", FileMode.Create, FileAccess.Write);
+                fileName = directoryAFiles[5].Name;
+                openPath = dirPath + directoryAFiles[5].Name;
+                writePath = dirPathAttachment + "A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls";
+            }
+            //FOR 雷射孔微蝕#2
+            else if (lineName == "雷射孔微蝕#2")
+            {
+                fileName = directoryAFiles[6].Name;
+                openPath = dirPath + directoryAFiles[6].Name;
+                writePath = dirPathAttachment + "A06-" + machineCode + "-" + lineName + "-雷射孔微蝕設備性能檢測數值記錄表.xls";
             }
             //FOR VCP
             else if (lineName == "水5" || lineName == "水6")
             {
-                file = new FileStream(dirPath + directoryAFiles[1].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                Console.WriteLine(directoryAFiles[1].Name + "開啟成功");
-                workBook = new HSSFWorkbook(file);
-                workSheet = workBook.GetSheetAt(0);
-
-                workSheet.GetRow(2).GetCell(0).SetCellValue("設備名稱: VCP水平電鍍線" + lineName + "線");
-                workSheet.GetRow(2).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("yyyy   /    M    /   dd"));
-
-                file = new FileStream(dirPathAttachment + "A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls", FileMode.Create, FileAccess.Write);
+                fileName = directoryAFiles[1].Name;
+                openPath = dirPath + directoryAFiles[1].Name;
+                writePath = dirPathAttachment + "A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls";
             }
             //FOR PTH
             else if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
-                file = new FileStream(dirPath + directoryAFiles[3].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                Console.WriteLine(directoryAFiles[3].Name + "開啟成功");
-                workBook = new HSSFWorkbook(file);
-                workSheet = workBook.GetSheetAt(0);
+                fileName = directoryAFiles[3].Name;
+                openPath = dirPath + directoryAFiles[3].Name;
+                writePath = dirPathAttachment + "A041-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
 
-                workSheet.GetRow(2).GetCell(0).SetCellValue("設備名稱:" + lineName);
-                workSheet.GetRow(2).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("yyyy   /    M    /   dd"));
-
-                file = new FileStream(dirPathAttachment + "A04-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls", FileMode.Create, FileAccess.Write);
+                fileName2 = directoryAFiles[4].Name;
+                openPath2 = dirPath + directoryAFiles[4].Name;
+                writePath2 = dirPathAttachment + "A042-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
             }
             //FOR SVCP
             else
             {
-                file = new FileStream(dirPath + directoryAFiles[2].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                Console.WriteLine(directoryAFiles[2].Name + "開啟成功");
+                fileName = directoryAFiles[2].Name;
+                openPath = dirPath + directoryAFiles[2].Name;
+                writePath = dirPathAttachment + "A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls";
+            }
+
+            file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            Console.WriteLine(fileName + "寫入成功");
+            workBook = new HSSFWorkbook(file);
+            workSheet = workBook.GetSheetAt(0);
+
+            workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
+            workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
+
+            file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
+            workBook.Write(file);
+            if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
+            {
+                file = new FileStream(openPath2, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                Console.WriteLine(fileName2 + "寫入成功");
                 workBook = new HSSFWorkbook(file);
                 workSheet = workBook.GetSheetAt(0);
 
-                workSheet.GetRow(2).GetCell(0).SetCellValue("設備名稱: SVCP水平電鍍線" + lineName + "線");
-                workSheet.GetRow(2).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("yyyy   /    M    /   dd"));
+                workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
+                workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
-                file = new FileStream(dirPathAttachment + "A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls", FileMode.Create, FileAccess.Write);
+                file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
+                workBook.Write(file);
             }
-
-            
-            workBook.Write(file);
             workBook.Close();
             file.Close();
         }
@@ -568,11 +578,9 @@ namespace EXCELforCPWork
                         IWorkbook workBook;
                         ISheet workSheet;
                         file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                        Console.WriteLine(directoryFile.Name + "開啟成功");
                         workBook = new HSSFWorkbook(file);
                         workSheet = workBook.GetSheetAt(0);
                         HSSFSimpleShape circle1;
-                        int attachmentForm;
                         ICellStyle cellStyle2 = workBook.CreateCellStyle();
                         //置中的Style
                         cellStyle2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
@@ -725,6 +733,7 @@ namespace EXCELforCPWork
                         }
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
+                        Console.WriteLine(directoryFile.Name + "寫入成功");
                         workBook.Close();
                         file.Close();
                     }
@@ -741,16 +750,11 @@ namespace EXCELforCPWork
         }
         static void DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber)
         {
-            bool heaterCheck;
-            bool currentCheck;
-            HSSFSimpleShape circle1;
-            DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out circle1, out heaterCheck, out currentCheck);
+            DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out HSSFSimpleShape circle1, out bool heaterCheck, out bool currentCheck);
         }
         static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber, out HSSFSimpleShape circle1)
-        {
-            bool heaterCheck;
-            bool currentCheck;            
-            return DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out circle1, out heaterCheck, out currentCheck);
+        {          
+            return DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out circle1, out bool heaterCheck, out bool currentCheck);
         }
         static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber, out HSSFSimpleShape circle1, out bool heaterCheck, out bool currentCheck)
         {

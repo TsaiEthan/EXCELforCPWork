@@ -663,11 +663,12 @@ namespace EXCELforCPWork
             ISheet workSheet = workBook.GetSheetAt(0);
 
             Random randomNumber = new Random(Guid.NewGuid().GetHashCode());
-            //亂數產生設定電流值，介於600~1500
-            int randomSetCurrent = randomNumber.Next(600, 1500);
+
             //填入資料
             if (lineName == "水5" || lineName == "水6")
             {
+                //亂數產生設定電流值，介於300~500
+                int randomSetCurrent = randomNumber.Next(300, 500);
                 for (int i = 3; i <= 18; i++)
                 {
                     workSheet.GetRow(5).GetCell(i).SetCellValue(randomSetCurrent + "A");
@@ -683,6 +684,8 @@ namespace EXCELforCPWork
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
                      || lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
+                //亂數產生設定電流值，介於540~1250
+                int randomSetCurrent = randomNumber.Next(540, 1250);
                 for (int i = 3; i <= 10; i++)
                 {
                     workSheet.GetRow(6).GetCell(i).SetCellValue(randomSetCurrent + "A");

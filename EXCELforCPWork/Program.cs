@@ -11,7 +11,7 @@ namespace EXCELforCPWork
     {
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 2; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = date.ToString("MM");
@@ -585,12 +585,8 @@ namespace EXCELforCPWork
         }
         static void DoForm_A07A08(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            //執行日期為executionDate[0]
-            FileStream file;
-            IWorkbook workBook = null;
-            ISheet workSheet;
+            //設定開啟及儲存的路徑跟檔名
             string openPath = "", writePath = "", writePath2 = "";
-            string storageGridDate = "", storageGridLineName = "";
             //FOR PTH#5、PTH#6
             if (lineName == "水5" || lineName == "水6")
             {
@@ -611,10 +607,6 @@ namespace EXCELforCPWork
                 writePath2 = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "B-水平電鍍線電流比對紀錄表.xls";
             }
 
-            file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);            
-            workBook = new HSSFWorkbook(file);
-            workSheet = workBook.GetSheetAt(0);
-
             int gridRow = 0, gridColumn = 0, checkBoxIndex = 0, checkBoxIndexA = 0, checkBoxIndexB = 0;
             //FOR PTH#5、PTH#6
             if (lineName == "水5" || lineName == "水6")
@@ -622,9 +614,9 @@ namespace EXCELforCPWork
                 gridRow = 1;
                 gridColumn = 15;
                 if(lineName == "水5")
-                    checkBoxIndex = 10;
+                    checkBoxIndex = 9;
                 else if(lineName == "水6")
-                    checkBoxIndex = 22;
+                    checkBoxIndex = 21;
             }
             //FOR 水7~水12
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
@@ -660,25 +652,69 @@ namespace EXCELforCPWork
                         break;
                 }
             }
+            DoA07A08Form(openPath, writePath, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexA);
+            if (lineName == "水8" || lineName == "水10" || lineName == "水12")
+                DoA07A08Form(openPath, writePath2, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexB);
+        }
+        static void DoA07A08Form(string openPath, string writePath, int gridRow, int gridColumn, DateTime executionDate, string lineName, int checkBoxIndex, int checkBoxIndexAB)
+        {
+            FileStream file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook workBook = new HSSFWorkbook(file);
+            ISheet workSheet = workBook.GetSheetAt(0);
+
+            Random randomNumber = new Random(Guid.NewGuid().GetHashCode());
+            //亂數產生設定電流值，介於600~1500
+            int randomSetCurrent = randomNumber.Next(600, 1500);
+            //填入資料
+            if (lineName == "水5" || lineName == "水6")
+            {
+                for (int i = 3; i <= 18; i++)
+                {
+                    workSheet.GetRow(5).GetCell(i).SetCellValue(randomSetCurrent + "A");
+                    //亂數產生實際電流值，介於(設定電流值的96%)~(設定電流值+2)
+                    int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.96), randomSetCurrent + 2);
+                    workSheet.GetRow(6).GetCell(i).SetCellValue(randomActualCurrent + "A");
+                    double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
+                    double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;
+                    double errorPercent = Math.Round(errorPercentTemp2, 1, MidpointRounding.AwayFromZero);
+                    workSheet.GetRow(7).GetCell(i).SetCellValue(errorPercent + "%");
+                }
+            }
+            else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
+                     || lineName == "水8" || lineName == "水10" || lineName == "水12")
+            {
+                for (int i = 3; i <= 10; i++)
+                {
+                    workSheet.GetRow(6).GetCell(i).SetCellValue(randomSetCurrent + "A");
+                    //亂數產生實際電流值，介於(設定電流值的96%)~(設定電流值+2)
+                    int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.96), randomSetCurrent + 2);
+                    workSheet.GetRow(7).GetCell(i).SetCellValue(randomActualCurrent + "A");
+                    double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
+                    double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;
+                    double errorPercent = Math.Round(errorPercentTemp2, 1, MidpointRounding.AwayFromZero);
+                    workSheet.GetRow(8).GetCell(i).SetCellValue(errorPercent + "%");
+                }
+            }
+
             //填入執行日期
-            storageGridDate = workSheet.GetRow(gridRow).GetCell(gridColumn).StringCellValue;
+            string storageGridDate = workSheet.GetRow(gridRow).GetCell(gridColumn).StringCellValue;
             storageGridDate = storageGridDate.Remove(4, 4);
-            storageGridDate = storageGridDate.Insert(4, executionDate[0].Year.ToString());
+            storageGridDate = storageGridDate.Insert(4, executionDate.Year.ToString());
             storageGridDate = storageGridDate.Remove(11, 2);
-            storageGridDate = storageGridDate.Insert(11, executionDate[0].Month.ToString());
+            storageGridDate = storageGridDate.Insert(11, executionDate.Month.ToString());
             storageGridDate = storageGridDate.Remove(16, 2);
-            storageGridDate = storageGridDate.Insert(16, executionDate[0].Day.ToString());
+            storageGridDate = storageGridDate.Insert(16, executionDate.Day.ToString());
             workSheet.GetRow(gridRow).GetCell(gridColumn).SetCellValue(storageGridDate);
 
             //勾選線別
-            storageGridLineName = workSheet.GetRow(gridRow).GetCell(0).StringCellValue;
+            string storageGridLineName = workSheet.GetRow(gridRow).GetCell(0).StringCellValue;
             storageGridLineName = storageGridLineName.Remove(checkBoxIndex, 1);
             storageGridLineName = storageGridLineName.Insert(checkBoxIndex, "R");
             if (lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
-                storageGridLineName = storageGridLineName.Remove(checkBoxIndexA, 1);
-                storageGridLineName = storageGridLineName.Insert(checkBoxIndexA, "R");
-            }            
+                storageGridLineName = storageGridLineName.Remove(checkBoxIndexAB, 1);
+                storageGridLineName = storageGridLineName.Insert(checkBoxIndexAB, "R");
+            }
             HSSFRichTextString lineNameToGrid = new HSSFRichTextString(storageGridLineName);
             IFont font = workBook.CreateFont();
             //字型
@@ -688,8 +724,8 @@ namespace EXCELforCPWork
             //FOR PTH#5、PTH#6
             if (lineName == "水5" || lineName == "水6")
             {
-                lineNameToGrid.ApplyFont(10, 11, font);
-                lineNameToGrid.ApplyFont(22, 23, font);
+                lineNameToGrid.ApplyFont(9, 10, font);
+                lineNameToGrid.ApplyFont(21, 22, font);
             }
             //FOR 水7~水12
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
@@ -707,61 +743,12 @@ namespace EXCELforCPWork
                 lineNameToGrid.ApplyFont(40, 41, font);
                 lineNameToGrid.ApplyFont(45, 46, font);
                 lineNameToGrid.ApplyFont(48, 49, font);
-            }                
+            }
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
 
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
             workBook.Write(file);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
-
-            //水平電鍍線，偶數有B列的
-            if (lineName == "水8" || lineName == "水10" || lineName == "水12")
-            {
-                file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                workBook = new HSSFWorkbook(file);
-                workSheet = workBook.GetSheetAt(0);
-
-                //填入執行日期
-                storageGridDate = workSheet.GetRow(gridRow).GetCell(gridColumn).StringCellValue;
-                storageGridDate = storageGridDate.Remove(4, 4);
-                storageGridDate = storageGridDate.Insert(4, executionDate[0].Year.ToString());
-                storageGridDate = storageGridDate.Remove(11, 2);
-                storageGridDate = storageGridDate.Insert(11, executionDate[0].Month.ToString());
-                storageGridDate = storageGridDate.Remove(16, 2);
-                storageGridDate = storageGridDate.Insert(16, executionDate[0].Day.ToString());
-                workSheet.GetRow(gridRow).GetCell(gridColumn).SetCellValue(storageGridDate);
-
-                //勾選線別
-                storageGridLineName = workSheet.GetRow(gridRow).GetCell(0).StringCellValue;
-                storageGridLineName = storageGridLineName.Remove(checkBoxIndex, 1);
-                storageGridLineName = storageGridLineName.Insert(checkBoxIndex, "R");
-                storageGridLineName = storageGridLineName.Remove(checkBoxIndexB, 1);
-                storageGridLineName = storageGridLineName.Insert(checkBoxIndexB, "R");
-                lineNameToGrid = new HSSFRichTextString(storageGridLineName);
-                font = workBook.CreateFont();
-                //字型
-                font.FontName = "Wingdings 2";
-                //字體尺寸
-                font.FontHeightInPoints = 14;
-                lineNameToGrid.ApplyFont(3, 4, font);
-                lineNameToGrid.ApplyFont(19, 20, font);
-                lineNameToGrid.ApplyFont(35, 36, font);
-                lineNameToGrid.ApplyFont(7, 8, font);
-                lineNameToGrid.ApplyFont(11, 12, font);
-                lineNameToGrid.ApplyFont(14, 15, font);
-                lineNameToGrid.ApplyFont(23, 24, font);
-                lineNameToGrid.ApplyFont(27, 28, font);
-                lineNameToGrid.ApplyFont(30, 31, font);
-                lineNameToGrid.ApplyFont(40, 41, font);
-                lineNameToGrid.ApplyFont(45, 46, font);
-                lineNameToGrid.ApplyFont(48, 49, font);
-                workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
-
-                file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
-                workBook.Write(file);
-                Console.WriteLine(GetFileName(file.Name) + "寫入成功");
-            }
-            
             workBook.Close();
             file.Close();
         }

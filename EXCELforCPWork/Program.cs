@@ -11,7 +11,7 @@ namespace EXCELforCPWork
     {
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 2; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = date.ToString("MM");

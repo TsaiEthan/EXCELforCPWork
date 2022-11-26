@@ -351,12 +351,12 @@ namespace EXCELforCPWork
                         workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
                         //文坦讀孔機
                         if (formName[0] == "G18")
-                        {                           
-                            MachineCodeDrowingCircle("G19", 700, 1000, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G20", 15, 245, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G21", 315, 545, workBook, folderPath, directoryFile);
+                        {
+                            MachineCodeDrowingCircle("G19", 693, 993, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G20", 8, 238, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G21", 310, 540, workBook, folderPath, directoryFile);
                             //For G18
-                            DrowingCircle(false, workBook, workSheet, 28, 315, 615, 18);
+                            DrowingCircle(false, workBook, workSheet, 28, 304, 604, 18);
                         }
                         //PLASMA
                         else if (formName[0] == "G26")
@@ -926,11 +926,11 @@ namespace EXCELforCPWork
                         //文坦讀孔機
                         if (formName[0] == "G18")
                         {
-                            MachineCodeDrowingCircle("G19", 700, 1000, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G20", 15, 245, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G21", 315, 545, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G19", 693, 993, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G20", 8, 238, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G21", 310, 540, workBook, folderPath, directoryFile);
                             //For G18
-                            DrowingCircle(false, workBook, workSheet, 28, 315, 615, 18);
+                            DrowingCircle(false, workBook, workSheet, 28, 304, 604, 18);
                         }
                         //PLASMA
                         else if (formName[0] == "G26")

@@ -371,7 +371,7 @@ namespace EXCELforCPWork
                         SetPrintStyle(workSheet);
 
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file);
+                        workBook.Write(file, true);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                         workBook.Close();
                         file.Close();
@@ -466,7 +466,7 @@ namespace EXCELforCPWork
                 circle2 = DrowingCircle(false, workBook, workSheet, 1, 350, 406, machineCodeNumber, out c2);
             SetPrintStyle(workSheet);
             FileStream newFile = new FileStream(folderPath + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
-            workBook.Write(newFile);
+            workBook.Write(newFile, true);
             circle.RemoveShape(c1);
             if (machineCodeNumber == 28 || machineCodeNumber == 29) 
                 circle2.RemoveShape(c2);
@@ -518,7 +518,7 @@ namespace EXCELforCPWork
             SetPrintStyle(workSheet);
 
             file = new FileStream(dirPathAttachment + "A01-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             workBook.Close();
             file.Close();
@@ -574,7 +574,7 @@ namespace EXCELforCPWork
             SetPrintStyle(workSheet);
 
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
@@ -588,7 +588,7 @@ namespace EXCELforCPWork
                 SetPrintStyle(workSheet);
 
                 file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
-                workBook.Write(file);
+                workBook.Write(file, true);
                 Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             }
             workBook.Close();
@@ -772,7 +772,7 @@ namespace EXCELforCPWork
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
             SetPrintStyle(workSheet);
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             workBook.Close();
             file.Close();
@@ -965,7 +965,7 @@ namespace EXCELforCPWork
                         }
                         SetPrintStyle(workSheet);
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file);
+                        workBook.Write(file, true);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                         workBook.Close();
                         file.Close();

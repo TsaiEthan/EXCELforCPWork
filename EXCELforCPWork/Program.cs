@@ -11,7 +11,7 @@ namespace EXCELforCPWork
     {
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 2; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = date.ToString("MM");
@@ -361,12 +361,15 @@ namespace EXCELforCPWork
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 400, 630, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 710, 940, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
                             //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 80, 310, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 315, 373, 26);
+                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                            DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
                         }
+
+                        SetPrintStyle(workSheet);
+
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
@@ -383,6 +386,18 @@ namespace EXCELforCPWork
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
+        }
+        static void SetPrintStyle(ISheet workSheet)
+        {
+            //設定列印邊界，0.2=0.5CM
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.TopMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.RightMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.BottomMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.LeftMargin, 0.2);
+            //水平置中
+            workSheet.HorizontallyCenter = true;
+            //垂直置中
+            workSheet.VerticallyCenter = true;
         }
         static string GetFileName(string fullFileName)
         {
@@ -446,9 +461,10 @@ namespace EXCELforCPWork
             HSSFPatriarch circle = DrowingCircle(false, workBook, workSheet, 28, x3, x4, machineCodeNumber, out c1);
             HSSFPatriarch circle2 = null;
             if (machineCodeNumber == 28)
-                circle2 = DrowingCircle(false, workBook, workSheet, 1, 370, 428, machineCodeNumber, out c2);
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 304, 360, machineCodeNumber, out c2);
             else if(machineCodeNumber == 29)
-                circle2 = DrowingCircle(false, workBook, workSheet, 1, 425, 483, machineCodeNumber, out c2);
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 350, 406, machineCodeNumber, out c2);
+            SetPrintStyle(workSheet);
             FileStream newFile = new FileStream(folderPath + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
             workBook.Write(newFile);
             circle.RemoveShape(c1);
@@ -498,6 +514,8 @@ namespace EXCELforCPWork
                     workSheet.GetRow(i + 1).GetCell(5).SetCellValue("端子      -     ℃");
                 }
             }
+
+            SetPrintStyle(workSheet);
 
             file = new FileStream(dirPathAttachment + "A01-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
             workBook.Write(file);
@@ -553,6 +571,8 @@ namespace EXCELforCPWork
             workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
             workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
+            SetPrintStyle(workSheet);
+
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
             workBook.Write(file);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
@@ -564,6 +584,8 @@ namespace EXCELforCPWork
 
                 workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
                 workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
+
+                SetPrintStyle(workSheet);
 
                 file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
                 workBook.Write(file);
@@ -748,7 +770,7 @@ namespace EXCELforCPWork
                 lineNameToGrid.ApplyFont(48, 49, font);
             }
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
-
+            SetPrintStyle(workSheet);
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
             workBook.Write(file);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
@@ -935,12 +957,13 @@ namespace EXCELforCPWork
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 400, 630, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 710, 940, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
                             //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 80, 310, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 315, 373, 26);
+                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                            DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
                         }
+                        SetPrintStyle(workSheet);
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");

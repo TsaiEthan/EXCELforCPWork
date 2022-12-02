@@ -11,7 +11,7 @@ namespace EXCELforCPWork
     {
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
+            for (int monthToAdd = -1; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string month = date.ToString("MM");
@@ -182,7 +182,7 @@ namespace EXCELforCPWork
                             //表格中圈起保養月及畫刪除線
                             if (x1 != 0 && x2 != 0)
                             {
-                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0, out circle1, out heaterCheck);
+                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0, out circle1, ref heaterCheck);
                             }
                             else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
                                     && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
@@ -207,9 +207,9 @@ namespace EXCELforCPWork
                             case "G02":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
                                 break;
-                            //DESMEAR#5，第3個星期四保
+                            //DESMEAR#5，第2個星期五保
                             case "G03":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Thursday");
+                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
                                 break;
                             //DEBURR#1，第3個星期五保
                             case "G04":
@@ -310,7 +310,8 @@ namespace EXCELforCPWork
                             //雷射孔微蝕#2，第3個星期二保
                             case "G13":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
-                                DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
+                                if (heaterCheck)
+                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
                                 break;
                             //文坦讀孔機，第2個星期日保
                             case "G18":
@@ -361,14 +362,17 @@ namespace EXCELforCPWork
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 400, 630, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 710, 940, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
                             //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 80, 310, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 315, 373, 26);
+                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                            DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
                         }
+
+                        SetPrintStyle(workSheet);
+
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file);
+                        workBook.Write(file, true);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                         workBook.Close();
                         file.Close();
@@ -383,6 +387,18 @@ namespace EXCELforCPWork
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
             }
+        }
+        static void SetPrintStyle(ISheet workSheet)
+        {
+            //設定列印邊界，0.2=0.5CM
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.TopMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.RightMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.BottomMargin, 0.2);
+            workSheet.SetMargin(NPOI.SS.UserModel.MarginType.LeftMargin, 0.2);
+            //水平置中
+            workSheet.HorizontallyCenter = true;
+            //垂直置中
+            workSheet.VerticallyCenter = true;
         }
         static string GetFileName(string fullFileName)
         {
@@ -446,11 +462,12 @@ namespace EXCELforCPWork
             HSSFPatriarch circle = DrowingCircle(false, workBook, workSheet, 28, x3, x4, machineCodeNumber, out c1);
             HSSFPatriarch circle2 = null;
             if (machineCodeNumber == 28)
-                circle2 = DrowingCircle(false, workBook, workSheet, 1, 370, 428, machineCodeNumber, out c2);
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 304, 360, machineCodeNumber, out c2);
             else if(machineCodeNumber == 29)
-                circle2 = DrowingCircle(false, workBook, workSheet, 1, 425, 483, machineCodeNumber, out c2);
+                circle2 = DrowingCircle(false, workBook, workSheet, 1, 350, 406, machineCodeNumber, out c2);
+            SetPrintStyle(workSheet);
             FileStream newFile = new FileStream(folderPath + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
-            workBook.Write(newFile);
+            workBook.Write(newFile, true);
             circle.RemoveShape(c1);
             if (machineCodeNumber == 28 || machineCodeNumber == 29) 
                 circle2.RemoveShape(c2);
@@ -499,8 +516,10 @@ namespace EXCELforCPWork
                 }
             }
 
+            SetPrintStyle(workSheet);
+
             file = new FileStream(dirPathAttachment + "A01-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             workBook.Close();
             file.Close();
@@ -510,29 +529,34 @@ namespace EXCELforCPWork
             FileStream file;
             IWorkbook workBook = null;
             ISheet workSheet;
+            string machineName = "";
             string openPath = "", writePath = "";
             string openPath2 = "", writePath2 = "";
             //FOR DEBURR#1
             if (lineName == "DEBURR#1")
             {
+                machineName = "DEBURR(1)線";
                 openPath = dirPath + directoryAFiles[5].Name;
                 writePath = dirPathAttachment + "A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls";
             }
             //FOR 雷射孔微蝕#2
             else if (lineName == "雷射孔微蝕#2")
             {
+                machineName = "雷射孔微蝕(2)線";
                 openPath = dirPath + directoryAFiles[6].Name;
                 writePath = dirPathAttachment + "A06-" + machineCode + "-" + lineName + "-雷射孔微蝕設備性能檢測數值記錄表.xls";
             }
             //FOR VCP
             else if (lineName == "水5" || lineName == "水6")
             {
+                machineName = "水平電鍍線(VCP)(" + lineName.Remove(0,1) + ")線";
                 openPath = dirPath + directoryAFiles[1].Name;
                 writePath = dirPathAttachment + "A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls";
             }
             //FOR PTH
             else if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
+                machineName = "水平PTH(" + lineName.Remove(0, 4) + ")線";
                 openPath = dirPath + directoryAFiles[3].Name;
                 writePath = dirPathAttachment + "A041-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
 
@@ -542,6 +566,7 @@ namespace EXCELforCPWork
             //FOR SVCP
             else
             {
+                machineName = "水平電鍍線(SVCP)(" + lineName.Remove(0, 1) + ")線";
                 openPath = dirPath + directoryAFiles[2].Name;
                 writePath = dirPathAttachment + "A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls";
             }
@@ -550,11 +575,13 @@ namespace EXCELforCPWork
             workBook = new HSSFWorkbook(file);
             workSheet = workBook.GetSheetAt(0);
 
-            workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
+            workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
             workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
+            SetPrintStyle(workSheet);
+
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
@@ -562,11 +589,13 @@ namespace EXCELforCPWork
                 workBook = new HSSFWorkbook(file);
                 workSheet = workBook.GetSheetAt(0);
 
-                workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + lineName);
+                workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
                 workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
+                SetPrintStyle(workSheet);
+
                 file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
-                workBook.Write(file);
+                workBook.Write(file, true);
                 Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             }
             workBook.Close();
@@ -748,9 +777,9 @@ namespace EXCELforCPWork
                 lineNameToGrid.ApplyFont(48, 49, font);
             }
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
-
+            SetPrintStyle(workSheet);
             file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file);
+            workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             workBook.Close();
             file.Close();
@@ -935,14 +964,15 @@ namespace EXCELforCPWork
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 400, 630, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 710, 940, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
                             //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 80, 310, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 315, 373, 26);
+                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                            DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
                         }
+                        SetPrintStyle(workSheet);
                         file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file);
+                        workBook.Write(file, true);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                         workBook.Close();
                         file.Close();
@@ -960,15 +990,17 @@ namespace EXCELforCPWork
         }
         static void DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber)
         {
-            DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out HSSFSimpleShape circle1, out bool heaterCheck);
+            bool notUse = false;
+            DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out HSSFSimpleShape circle1, ref notUse);
         }
         static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber, out HSSFSimpleShape circle1)
-        {          
-            return DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out circle1, out bool heaterCheck);
-        }
-        static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber, out HSSFSimpleShape circle1, out bool heaterCheck)
         {
-            heaterCheck = false;
+            bool notUse = false;
+            return DrowingCircle(Maintenance, workBook, workSheet, i, x1, x2, machineCodeNumber, out circle1, ref notUse);
+        }
+        static HSSFPatriarch DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber, out HSSFSimpleShape circle1, ref bool heaterCheck)
+        {
+            //heaterCheck = false;
             int initial = 6;
             if(machineCodeNumber == 18 || machineCodeNumber == 19)
             {

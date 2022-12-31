@@ -14,27 +14,28 @@ namespace EXCELforCPWork
             for (int monthToAdd = -1; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
+                string year = date.ToString("yyyy");
                 string month = date.ToString("MM");
                 //string dirPath = @"H:\ChinPoonWork\";
                 string dirPath = System.IO.Directory.GetCurrentDirectory() + @"\";
-                string dirPathNewFolder = dirPath + month + "月";
-                string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
-                string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
-                string dirPathAttachment = dirPathNewFolder + @"\附件\";
+                string dirPathNewFolder = dirPath + year + "年" + month + "月";
+                //string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
+                //string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
+                //string dirPathAttachment = dirPathNewFolder + @"\附件\";
 
                 //產生需要的資料夾
-                CreateFolder(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
+                CreateFolder(dirPathNewFolder);
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
 
                 //製作保養表及產生相關附件
-                DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month, dirPathAttachment);
+                DoMaintenanceFormExcelFile(dirPath, date, month);
                 //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
             }
             Console.ReadLine();
         }
-        static void CreateFolder(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
+        static void CreateFolder(string dirPathNewFolder)
         {
             //建立資料夾，以月份區分
             if (!Directory.Exists(dirPathNewFolder))
@@ -42,14 +43,14 @@ namespace EXCELforCPWork
                 Directory.CreateDirectory(dirPathNewFolder);
 
                 //建立保養表、後三月預保養及附件資料夾
-                Directory.CreateDirectory(dirPathMaintenanceForm);
-                Directory.CreateDirectory(dirPathAppointmentMaintenanceForm);
-                Directory.CreateDirectory(dirPathAttachment);
+                //Directory.CreateDirectory(dirPathMaintenanceForm);
+                //Directory.CreateDirectory(dirPathAppointmentMaintenanceForm);
+                //Directory.CreateDirectory(dirPathAttachment);
                 Console.WriteLine("資料夾創建成功");
             }
         }
 
-        static void DoMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month, string dirPathAttachment)
+        static void DoMaintenanceFormExcelFile(string dirPath, DateTime date, string month)
         {
             try
             {

@@ -4,15 +4,21 @@ using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using System.IO;
+using System.Data;
 
 namespace EXCELforCPWork
 {
     internal class Program
     {
+        static string[] fileName = new string[3] { "保養表", "附件", "預保養表" };
+        static int maintenanceFormCount, attachmentCount, appointmentMaintenanceFormCount;
         static void Main(string[] args)
         {
-            for (int monthToAdd = -1; monthToAdd < 1; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 2; monthToAdd++)
             {
+                maintenanceFormCount = 0;
+                appointmentMaintenanceFormCount = 0;
+                attachmentCount = 0;
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string year = date.ToString("yyyy");
                 string month = date.ToString("MM");
@@ -29,9 +35,9 @@ namespace EXCELforCPWork
                     month = month.Remove(0, 1);
 
                 //製作保養表及產生相關附件
-                DoMaintenanceFormExcelFile(dirPath, date, month);
+                DoMaintenanceFormExcelFile(dirPath, dirPathNewFolder, date);
                 //製作預保養表
-                DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
+                DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathNewFolder, date);
             }
             Console.ReadLine();
         }
@@ -48,12 +54,24 @@ namespace EXCELforCPWork
                 //Directory.CreateDirectory(dirPathAttachment);
                 Console.WriteLine("資料夾創建成功");
             }
+            //創建"保養表", "附件", "預保養表"空白檔案            
+            foreach (string name in fileName)
+            {
+                IWorkbook workBook = new HSSFWorkbook(); ;
+                workBook.CreateSheet();
+                FileStream file = new FileStream(dirPathNewFolder + @"\" + name + ".xls", FileMode.Create, FileAccess.Write);
+                workBook.Write(file, true);
+                Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+                workBook.Close();
+                file.Close();
+            }
         }
 
-        static void DoMaintenanceFormExcelFile(string dirPath, DateTime date, string month)
+        static void DoMaintenanceFormExcelFile(string dirPath, string dirPathNewFolder, DateTime date)
         {
             try
             {
+                string month = date.ToString("MM");
                 //開啟Excel 2003檔案
                 FileInfo[] directoryGFiles = new FileInfo[] { };
                 FileInfo[] directoryAFiles = new FileInfo[] { };
@@ -65,7 +83,7 @@ namespace EXCELforCPWork
                     directoryGFiles = directoryInfo.GetFiles("G*.xls");
                     directoryAFiles = directoryInfo.GetFiles("A*.xls");
                 }
-                int monthInteger = StringToInt(month);
+                int monthInteger = StringToInt(date.ToString("MM"));
 
                 //獲取月份第一日及天數
                 DateTime monthFirstDay;
@@ -216,103 +234,103 @@ namespace EXCELforCPWork
                             case "G04":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Friday");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G04", "DEBURR#1");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G04", "DEBURR#1");
                                 break;
                             //PTH#4，第2個星期三保
                             case "G22":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Wednesday");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G22", "PTH#4");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G22", "PTH#4");
                                 break;
                             //PTH#5，第2個星期一保
                             case "G05":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G05", "PTH#5");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G05", "PTH#5");
                                 break;
                             //水5，第2個星期一保
                             case "G07":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G07", "水5");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G07", "水5");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
                                 if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G07", "水5");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G07", "水5");
                                 }
                                 break;
                             //PTH#6，第2個星期二保
                             case "G06":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G06", "PTH#6");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G06", "PTH#6");
                                 break;
                             //水6，第2個星期二保
                             case "G08":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G08", "水6");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
                                 if(heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G08", "水6");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
                                 if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G08", "水6");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G08", "水6");
                                 }
                                 break;
                             //水7，第1個星期四保
                             case "G09":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G09", "水7");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G09", "水7");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G09", "水7");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G09", "水7");
                                 }
                                 break;
                             //水8，第1個星期一保
                             case "G10":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Monday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G10", "水8");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G10", "水8");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G10", "水8");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G10", "水8");
                                 }
                                 break;
                             //水9，第2個星期四保
                             case "G11":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G11", "水9");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G11", "水9");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G11", "水9");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G11", "水9");
                                 }
                                 break;
                             //水10，第1個星期三保
                             case "G12":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Wednesday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G12", "水10");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G12", "水10");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Wednesday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G12", "水10");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G12", "水10");
                                 }
                                 break;
                             //雷射孔微蝕#2，第3個星期二保
                             case "G13":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
                                 break;
                             //文坦讀孔機，第2個星期日保
                             case "G18":
@@ -321,25 +339,25 @@ namespace EXCELforCPWork
                             //水11，第1個星期二保
                             case "G24":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Tuesday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G24", "水11");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G24", "水11");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G24", "水11");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G24", "水11");
                                 }
                                 break;
                             //水12，第1個星期五保
                             case "G25":
                                 executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Friday");
-                                DoForm_A01(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G25", "水12");
+                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
                                 if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathAttachment, directoryAFiles, executionDate, "G25", "水12");
+                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
                                 if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                                 {
                                     nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Friday");
-                                    DoForm_A07A08(dirPath, dirPathAttachment, directoryAFiles, nextMonthExecutionDate, "G25", "水12");
+                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G25", "水12");
                                 }
                                 break;
                             //PLASMA，第2個星期五保
@@ -354,17 +372,17 @@ namespace EXCELforCPWork
                         //文坦讀孔機
                         if (formName[0] == "G18")
                         {
-                            MachineCodeDrowingCircle("G19", 693, 993, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G20", 8, 238, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G21", 310, 540, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G19", 693, 993, workBook, dirPathNewFolder, directoryFile);
+                            MachineCodeDrowingCircle("G20", 8, 238, workBook, dirPathNewFolder, directoryFile);
+                            MachineCodeDrowingCircle("G21", 310, 540, workBook, dirPathNewFolder, directoryFile);
                             //For G18
                             DrowingCircle(false, workBook, workSheet, 28, 304, 604, 18);
                         }
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, dirPathNewFolder, directoryFile);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, dirPathNewFolder, directoryFile);
                             //For G26
                             DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
                             DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
@@ -372,7 +390,7 @@ namespace EXCELforCPWork
 
                         SetPrintStyle(workSheet);
 
-                        file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
+                        file = new FileStream(dirPathNewFolder + @"\" + directoryFile.Name, FileMode.Create, FileAccess.Write);
                         workBook.Write(file, true);
                         Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                         workBook.Close();
@@ -467,21 +485,18 @@ namespace EXCELforCPWork
             else if(machineCodeNumber == 29)
                 circle2 = DrowingCircle(false, workBook, workSheet, 1, 350, 406, machineCodeNumber, out c2);
             SetPrintStyle(workSheet);
-            FileStream newFile = new FileStream(folderPath + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
+            FileStream newFile = new FileStream(folderPath + @"\" + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
             workBook.Write(newFile, true);
             circle.RemoveShape(c1);
             if (machineCodeNumber == 28 || machineCodeNumber == 29) 
                 circle2.RemoveShape(c2);
         }
-        static void DoForm_A01(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
+        static void DoForm_A01(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            FileStream file;
-            IWorkbook workBook;
-            ISheet workSheet;
-            file = new FileStream(dirPath + directoryAFiles[0].Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);            
-            workBook = new HSSFWorkbook(file);
-            workSheet = workBook.GetSheetAt(0);
-
+            FileStream readFile = new FileStream(dirPath + directoryAFiles[0].Name, FileMode.Open, FileAccess.Read);
+            IWorkbook workBook = new HSSFWorkbook(readFile);
+            ISheet workSheet = workBook.GetSheetAt(0);
+            readFile.Close();
             workSheet.GetRow(0).GetCell(0).SetCellValue(lineName);
             if (lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
@@ -519,17 +534,15 @@ namespace EXCELforCPWork
 
             SetPrintStyle(workSheet);
 
-            file = new FileStream(dirPathAttachment + "A01-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
-            workBook.Write(file, true);
-            Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+            FileStream writeFile = new FileStream(dirPathNewFolder + @"/A01-" + machineCode + "-" + lineName + "-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.Create, FileAccess.Write);
+            workBook.Write(writeFile, true);
+            Console.WriteLine(GetFileName(writeFile.Name) + "寫入成功");
             workBook.Close();
-            file.Close();
+            writeFile.Close();
         }
-        static void DoForm_A02ToA06(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
+        static void DoForm_A02ToA06(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            FileStream file;
-            IWorkbook workBook = null;
-            ISheet workSheet;
+
             string machineName = "";
             string openPath = "", writePath = "";
             string openPath2 = "", writePath2 = "";
@@ -538,56 +551,62 @@ namespace EXCELforCPWork
             {
                 machineName = "DEBURR(1)線";
                 openPath = dirPath + directoryAFiles[5].Name;
-                writePath = dirPathAttachment + "A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls";
+                writePath = dirPathNewFolder + @"\A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls";
             }
             //FOR 雷射孔微蝕#2
             else if (lineName == "雷射孔微蝕#2")
             {
                 machineName = "雷射孔微蝕(2)線";
                 openPath = dirPath + directoryAFiles[6].Name;
-                writePath = dirPathAttachment + "A06-" + machineCode + "-" + lineName + "-雷射孔微蝕設備性能檢測數值記錄表.xls";
+                writePath = dirPathNewFolder + @"\A06-" + machineCode + "-" + lineName + "-雷射孔微蝕設備性能檢測數值記錄表.xls";
             }
             //FOR VCP
             else if (lineName == "水5" || lineName == "水6")
             {
                 machineName = "水平電鍍線(VCP)(" + lineName.Remove(0,1) + ")線";
                 openPath = dirPath + directoryAFiles[1].Name;
-                writePath = dirPathAttachment + "A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls";
+                writePath = dirPathNewFolder + @"\A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls";
             }
             //FOR PTH
             else if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
                 machineName = "水平PTH(" + lineName.Remove(0, 4) + ")線";
                 openPath = dirPath + directoryAFiles[3].Name;
-                writePath = dirPathAttachment + "A041-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
+                writePath = dirPathNewFolder + @"\A041-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
 
                 openPath2 = dirPath + directoryAFiles[4].Name;
-                writePath2 = dirPathAttachment + "A042-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
+                writePath2 = dirPathNewFolder + @"\A042-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
             }
             //FOR SVCP
             else
             {
                 machineName = "水平電鍍線(SVCP)(" + lineName.Remove(0, 1) + ")線";
                 openPath = dirPath + directoryAFiles[2].Name;
-                writePath = dirPathAttachment + "A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls";
+                writePath = dirPathNewFolder + @"\A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls";
             }
-
-            file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);            
-            workBook = new HSSFWorkbook(file);
-            workSheet = workBook.GetSheetAt(0);
+            FileStream readFile = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook workBook = new HSSFWorkbook(readFile);
+            ISheet workSheet = workBook.GetSheetAt(0);
 
             workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
             workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
             SetPrintStyle(workSheet);
 
-            file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file, true);
-            Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+            //file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
+
+            FileStream writeFile = new FileStream(dirPathNewFolder + @"\" + fileName[1] + ".xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook attachmentWorkBook = new HSSFWorkbook(writeFile);
+
+            workSheet.CopyTo(attachmentWorkBook, lineName, true, true);
+
+            attachmentWorkBook.Write(writeFile, true);
+            Console.WriteLine(GetFileName(writeFile.Name) + "寫入成功");
+            /*
             if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
-                file = new FileStream(openPath2, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                workBook = new HSSFWorkbook(file);
+                readFile = new FileStream(openPath2, FileMode.Open, FileAccess.Read);
+                workBook = new HSSFWorkbook(readFile);
                 workSheet = workBook.GetSheetAt(0);
 
                 workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
@@ -595,12 +614,14 @@ namespace EXCELforCPWork
 
                 SetPrintStyle(workSheet);
 
-                file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
-                workBook.Write(file, true);
-                Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+                writeFile = new FileStream(writePath2, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                attachmentWorkBook.Write(writeFile, true);
+                Console.WriteLine(GetFileName(writeFile.Name) + "寫入成功");
             }
+            */
             workBook.Close();
-            file.Close();
+            readFile.Close();
+            writeFile.Close();
         }
         static bool DoCurrentCheckForm(string storageGridWords, DateTime date)
         {
@@ -613,7 +634,7 @@ namespace EXCELforCPWork
             }
             return doCurrentCheckForm;
         }
-        static void DoForm_A07A08(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
+        static void DoForm_A07A08(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
             //設定開啟及儲存的路徑跟檔名
             string openPath = "", writePath = "", writePath2 = "";
@@ -621,20 +642,20 @@ namespace EXCELforCPWork
             if (lineName == "水5" || lineName == "水6")
             {
                 openPath = dirPath + directoryAFiles[7].Name;
-                writePath = dirPathAttachment + "A07-" + machineCode + "-" + lineName + "-PTH電流比對紀錄表.xls";
+                writePath = dirPathNewFolder + @"/A07-" + machineCode + "-" + lineName + "-PTH電流比對紀錄表.xls";
             }
             //FOR 奇數水平電鍍線(水7、水9、水11)
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11")
             {
                 openPath = dirPath + directoryAFiles[8].Name;
-                writePath = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "-水平電鍍線電流比對紀錄表.xls";
+                writePath = dirPathNewFolder + @"/A08-" + machineCode + "-" + lineName + "-水平電鍍線電流比對紀錄表.xls";
             }
             //FOR 偶數水平電鍍線(水8、水10、水12)
             else if (lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
                 openPath = dirPath + directoryAFiles[8].Name;
-                writePath = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "A-水平電鍍線電流比對紀錄表.xls";
-                writePath2 = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "B-水平電鍍線電流比對紀錄表.xls";
+                writePath = dirPathNewFolder + @"/A08-" + machineCode + "-" + lineName + "A-水平電鍍線電流比對紀錄表.xls";
+                writePath2 = dirPathNewFolder + @"/A08-" + machineCode + "-" + lineName + "B-水平電鍍線電流比對紀錄表.xls";
             }
 
             int gridRow = 0, gridColumn = 0, checkBoxIndex = 0, checkBoxIndexA = 0, checkBoxIndexB = 0;
@@ -688,10 +709,10 @@ namespace EXCELforCPWork
         }
         static void DoA07A08Form(string openPath, string writePath, int gridRow, int gridColumn, DateTime executionDate, string lineName, int checkBoxIndex, int checkBoxIndexAB)
         {
-            FileStream file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            IWorkbook workBook = new HSSFWorkbook(file);
+            FileStream readFile = new FileStream(openPath, FileMode.Open, FileAccess.Read);
+            IWorkbook workBook = new HSSFWorkbook(readFile);
             ISheet workSheet = workBook.GetSheetAt(0);
-
+            readFile.Close();
             Random randomNumber = new Random(Guid.NewGuid().GetHashCode());
 
             //填入資料
@@ -779,14 +800,16 @@ namespace EXCELforCPWork
             }
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
             SetPrintStyle(workSheet);
-            file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
-            workBook.Write(file, true);
-            Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+            workBook.SetSheetName(0, lineName);
+            FileStream writeFile = new FileStream(writePath, FileMode.Create, FileAccess.Write);
+            workBook.Write(writeFile, true);
+            Console.WriteLine(GetFileName(writeFile.Name) + "寫入成功");
             workBook.Close();
-            file.Close();
+            writeFile.Close();
         }
-        static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
+        static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date)
         {
+            string month = date.ToString("MM");
             try
             {
                 //開啟Excel 2003檔案
@@ -814,12 +837,11 @@ namespace EXCELforCPWork
                 {
                     if (File.Exists(dirPath + directoryFile.Name))
                     {
-                        FileStream file;
-                        IWorkbook workBook;
-                        ISheet workSheet;
-                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                        workBook = new HSSFWorkbook(file);
-                        workSheet = workBook.GetSheetAt(0);
+                        FileStream readFile = new FileStream(dirPath + directoryFile.Name, FileMode.Open, FileAccess.Read);
+                        IWorkbook workBook = new HSSFWorkbook(readFile);
+                        ISheet workSheet = workBook.GetSheetAt(0);
+                        readFile.Close();
+
                         HSSFSimpleShape circle1;
                         ICellStyle cellStyle2 = workBook.CreateCellStyle();
                         //置中的Style
@@ -972,11 +994,11 @@ namespace EXCELforCPWork
                             DrowingCircle(false, workBook, workSheet, 1, 255, 312, 26);
                         }
                         SetPrintStyle(workSheet);
-                        file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file, true);
-                        Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+                        FileStream writeFile = new FileStream(folderPath + @"\" + directoryFile.Name, FileMode.Create, FileAccess.Write);
+                        workBook.Write(writeFile, true);
+                        Console.WriteLine(GetFileName(writeFile.Name) + "寫入成功");
                         workBook.Close();
-                        file.Close();
+                        writeFile.Close();
                     }
                     else
                     {
@@ -1067,5 +1089,242 @@ namespace EXCELforCPWork
             else
                 return -1;
         }
+        /// <summary>
+        /// 复制sheet
+        /// </summary>
+        /// <param name="bjDt">sheet名集合</param>
+        /// <param name="modelfilename">模板附件名</param>
+        /// <param name="tpath">生成文件路径</param>
+        /// <returns></returns>
+        public HSSFWorkbook SheetCopy(DataTable bjDt, string modelfilename, out string tpath)
+        {
+            string templetfilepath = @"files\" + modelfilename + ".xls";//模版Excel
+
+            tpath = @"files\download\" + modelfilename + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".xls";//中介Excel，以它为中介来导出，避免直接使用模块Excel而改变模块的格式
+            FileInfo ff = new FileInfo(tpath);
+            if (ff.Exists)
+            {
+                ff.Delete();
+            }
+            FileStream fs = File.Create(tpath);//创建中间excel
+            HSSFWorkbook x1 = new HSSFWorkbook();
+            x1.Write(fs);
+            fs.Close();
+            FileStream fileRead = new FileStream(templetfilepath, FileMode.Open, FileAccess.Read);
+            HSSFWorkbook hssfworkbook = new HSSFWorkbook(fileRead);
+            FileStream fileSave2 = new FileStream(tpath, FileMode.Open, FileAccess.Read);
+            HSSFWorkbook book2 = new HSSFWorkbook(fileSave2);
+            HSSFWorkbook[] book = new HSSFWorkbook[2] { book2, hssfworkbook };
+            HSSFSheet CPS = hssfworkbook.GetSheet("Sheet0") as HSSFSheet;//获得模板sheet
+            string rsbh = bjDt.Rows[0]["name"].ToString();
+            CPS.CopyTo(book2, rsbh, true, true);//将模板sheet复制到目标sheet
+            HSSFSheet sheet = book2.GetSheet(bjDt.Rows[0]["name"].ToString()) as HSSFSheet;//获得当前sheet
+            for (int i = 1; i < bjDt.Rows.Count; i++)
+            {
+                sheet.CopySheet(bjDt.Rows[i]["name"].ToString(), true);//将sheet复制到同一excel的其他sheet上
+            }
+            return book2;
+        }
     }
+    /*
+    public static class NPOIExt
+    {    /// 
+             /// 跨工作薄Workbook复制工作表Sheet    /// 
+             /// 源工作表Sheet
+             /// 目标工作薄Workbook
+             /// 目标工作表Sheet名
+             /// 是否复制打印设置
+        public static ISheet CrossCloneSheet(this ISheet sSheet, IWorkbook dWb, string dSheetName, bool clonePrintSetup)
+        {
+            ISheet dSheet;
+            dSheetName = string.IsNullOrEmpty(dSheetName) ? sSheet.SheetName : dSheetName;
+            dSheetName = (dWb.GetSheet(dSheetName) == null) ? dSheetName : dSheetName + "_拷贝";
+            dSheet = dWb.GetSheet(dSheetName) ?? dWb.CreateSheet(dSheetName);
+            CopySheet(sSheet, dSheet); if (clonePrintSetup)
+                ClonePrintSetup(sSheet, dSheet);
+            dWb.SetActiveSheet(dWb.GetSheetIndex(dSheet));  //当前Sheet作为下次打开默认Sheet
+            return dSheet;
+        }    /// 
+                 /// 跨工作薄Workbook复制工作表Sheet    /// 
+                 /// 源工作表Sheet
+                 /// 目标工作薄Workbook
+                 /// 目标工作表Sheet名
+        public static ISheet CrossCloneSheet(this ISheet sSheet, IWorkbook dWb, string dSheetName)
+        {
+            bool clonePrintSetup = true; return CrossCloneSheet(sSheet, dWb, dSheetName, clonePrintSetup);
+        }    /// 
+                 /// 跨工作薄Workbook复制工作表Sheet    /// 
+                 /// 源工作表Sheet
+                 /// 目标工作薄Workbook
+        public static ISheet CrossCloneSheet(this ISheet sSheet, IWorkbook dWb)
+        {
+            string dSheetName = sSheet.SheetName; bool clonePrintSetup = true; return CrossCloneSheet(sSheet, dWb, dSheetName, clonePrintSetup);
+        }
+        private static IFont FindFont(this IWorkbook dWb, IFont font, List<IFont> dFonts)
+        {        //IFont dFont = dWb.FindFont(font.Boldweight, font.Color, (short)font.FontHeight, font.FontName, font.IsItalic, font.IsStrikeout, font.TypeOffset, font.Underline);
+            IFont dFont = null; foreach (IFont currFont in dFonts)
+            {            //if (currFont.Charset != font.Charset) continue;            //else            //if (currFont.Color != font.Color) continue;            //else
+                if (currFont.FontName != font.FontName) continue; else if (currFont.FontHeight != font.FontHeight) continue; else if (currFont.IsBold != font.IsBold) continue; else if (currFont.IsItalic != font.IsItalic) continue; else if (currFont.IsStrikeout != font.IsStrikeout) continue; else if (currFont.Underline != font.Underline) continue; else if (currFont.TypeOffset != font.TypeOffset) continue; else { dFont = currFont; break; }
+            }
+            return dFont;
+        }
+        private static ICellStyle FindStyle(this IWorkbook dWb, IWorkbook sWb, ICellStyle style, List<ICellStyle> dCellStyles, List<IFont> dFonts)
+        {
+            ICellStyle dStyle = null; foreach (ICellStyle currStyle in dCellStyles)
+            {
+                if (currStyle.Alignment != style.Alignment) continue;
+                else if (currStyle.VerticalAlignment != style.VerticalAlignment) continue;
+                else if (currStyle.BorderTop != style.BorderTop) continue;
+                else if (currStyle.BorderBottom != style.BorderBottom) continue;
+                else if (currStyle.BorderLeft != style.BorderLeft) continue;
+                else if (currStyle.BorderRight != style.BorderRight) continue;
+                else if (currStyle.TopBorderColor != style.TopBorderColor) continue;
+                else if (currStyle.BottomBorderColor != style.BottomBorderColor) continue;
+                else if (currStyle.LeftBorderColor != style.LeftBorderColor) continue;
+                else if (currStyle.RightBorderColor != style.RightBorderColor) continue;            //else if (currStyle.BorderDiagonal != style.BorderDiagonal) continue;            //else if (currStyle.BorderDiagonalColor != style.BorderDiagonalColor) continue;            //else if (currStyle.BorderDiagonalLineStyle != style.BorderDiagonalLineStyle) continue;            //else if (currStyle.FillBackgroundColor != style.FillBackgroundColor) continue;            //else if (currStyle.FillBackgroundColorColor != style.FillBackgroundColorColor) continue;            //else if (currStyle.FillForegroundColor != style.FillForegroundColor) continue;            //else if (currStyle.FillForegroundColorColor != style.FillForegroundColorColor) continue;            //else if (currStyle.FillPattern != style.FillPattern) continue;
+                else if (currStyle.Indention != style.Indention) continue;
+                else if (currStyle.IsHidden != style.IsHidden) continue;
+                else if (currStyle.IsLocked != style.IsLocked) continue;
+                else if (currStyle.Rotation != style.Rotation) continue;
+                else if (currStyle.ShrinkToFit != style.ShrinkToFit) continue;
+                else if (currStyle.WrapText != style.WrapText) continue;
+                else if (!currStyle.GetDataFormatString().Equals(style.GetDataFormatString())) continue;
+                else
+                {
+                    IFont sFont = sWb.GetFontAt(style.FontIndex);
+                    IFont dFont = dWb.FindFont(sFont, dFonts);
+                    if (dFont == null)
+                        continue;
+                    else
+                    {
+                        currStyle.SetFont(dFont);
+                        dStyle = currStyle; break;
+                    }
+                }
+            }
+            return dStyle;
+        }
+        private static IFont CopyFont(this IFont dFont, IFont sFont, List<IFont> dFonts)
+        {        //dFont.Charset = sFont.Charset;        //dFont.Color = sFont.Color;
+            dFont.FontHeight = sFont.FontHeight;
+            dFont.FontName = sFont.FontName;
+            dFont.IsBold = sFont.IsBold;
+            dFont.IsItalic = sFont.IsItalic;
+            dFont.IsStrikeout = sFont.IsStrikeout;
+            dFont.Underline = sFont.Underline;
+            dFont.TypeOffset = sFont.TypeOffset;
+            dFonts.Add(dFont); return dFont;
+        }
+        private static ICellStyle CopyStyle(this ICellStyle dCellStyle, ICellStyle sCellStyle, IWorkbook dWb, IWorkbook sWb, List<ICellStyle> dCellStyles, List<IFont> dFonts)
+        {
+            ICellStyle currCellStyle = dCellStyle;
+            currCellStyle.Alignment = sCellStyle.Alignment;
+            currCellStyle.VerticalAlignment = sCellStyle.VerticalAlignment;
+            currCellStyle.BorderTop = sCellStyle.BorderTop;
+            currCellStyle.BorderBottom = sCellStyle.BorderBottom;
+            currCellStyle.BorderLeft = sCellStyle.BorderLeft;
+            currCellStyle.BorderRight = sCellStyle.BorderRight;
+            currCellStyle.TopBorderColor = sCellStyle.TopBorderColor;
+            currCellStyle.LeftBorderColor = sCellStyle.LeftBorderColor;
+            currCellStyle.RightBorderColor = sCellStyle.RightBorderColor;
+            currCellStyle.BottomBorderColor = sCellStyle.BottomBorderColor;        //dCellStyle.BorderDiagonal = sCellStyle.BorderDiagonal;        //dCellStyle.BorderDiagonalColor = sCellStyle.BorderDiagonalColor;        //dCellStyle.BorderDiagonalLineStyle = sCellStyle.BorderDiagonalLineStyle;        //dCellStyle.FillBackgroundColor = sCellStyle.FillBackgroundColor;        //dCellStyle.FillForegroundColor = sCellStyle.FillForegroundColor;        //dCellStyle.FillPattern = sCellStyle.FillPattern;
+            currCellStyle.Indention = sCellStyle.Indention;
+            currCellStyle.IsHidden = sCellStyle.IsHidden;
+            currCellStyle.IsLocked = sCellStyle.IsLocked;
+            currCellStyle.Rotation = sCellStyle.Rotation;
+            currCellStyle.ShrinkToFit = sCellStyle.ShrinkToFit;
+            currCellStyle.WrapText = sCellStyle.WrapText;
+            currCellStyle.DataFormat = dWb.CreateDataFormat().GetFormat(sWb.CreateDataFormat().GetFormat(sCellStyle.DataFormat));
+            IFont sFont = sCellStyle.GetFont(sWb);
+            IFont dFont = dWb.FindFont(sFont, dFonts) ?? dWb.CreateFont().CopyFont(sFont, dFonts);
+            currCellStyle.SetFont(dFont);
+            dCellStyles.Add(currCellStyle); return currCellStyle;
+        }
+        private static void CopySheet(ISheet sSheet, ISheet dSheet)
+        {
+            var maxColumnNum = 0;
+            List<ICellStyle> dCellStyles = new List<ICellStyle>();
+            List<IFont> dFonts = new List<IFont> { };
+            MergerRegion(sSheet, dSheet); for (int i = sSheet.FirstRowNum; i <= sSheet.LastRowNum; i++)
+            {
+                IRow sRow = sSheet.GetRow(i);
+                IRow dRow = dSheet.CreateRow(i); if (sRow != null)
+                {
+                    CopyRow(sRow, dRow, dCellStyles, dFonts); if (sRow.LastCellNum > maxColumnNum)
+                        maxColumnNum = sRow.LastCellNum;
+                }
+            }
+            for (int i = 0; i <= maxColumnNum; i++)
+                dSheet.SetColumnWidth(i, sSheet.GetColumnWidth(i));
+        }
+        private static void CopyRow(IRow sRow, IRow dRow, List<ICellStyle> dCellStyles, List<IFont> dFonts)
+        {
+            dRow.Height = sRow.Height;
+            ISheet sSheet = sRow.Sheet;
+            ISheet dSheet = dRow.Sheet; for (int j = sRow.FirstCellNum; j <= sRow.LastCellNum; j++)
+            {
+                ICell sCell = sRow.GetCell(j);
+                ICell dCell = dRow.GetCell(j); if (sCell != null)
+                {
+                    if (dCell == null)
+                        dCell = dRow.CreateCell(j);
+                    CopyCell(sCell, dCell, dCellStyles, dFonts);
+                }
+            }
+        }
+        private static void CopyCell(ICell sCell, ICell dCell, List<ICellStyle> dCellStyles, List<IFont> dFonts)
+        {
+            ICellStyle currCellStyle = dCell.Sheet.Workbook.FindStyle(sCell.Sheet.Workbook, sCell.CellStyle, dCellStyles, dFonts); if (currCellStyle == null)
+                currCellStyle = dCell.Sheet.Workbook.CreateCellStyle().CopyStyle(sCell.CellStyle, dCell.Sheet.Workbook, sCell.Sheet.Workbook, dCellStyles, dFonts);
+            dCell.CellStyle = currCellStyle; switch (sCell.CellType)
+            {
+                case CellType.String:
+                    dCell.SetCellValue(sCell.StringCellValue); break;
+                case CellType.Numeric:
+                    dCell.SetCellValue(sCell.NumericCellValue); break;
+                case CellType.Blank:
+                    dCell.SetCellType(CellType.Blank); break;
+                case CellType.Boolean:
+                    dCell.SetCellValue(sCell.BooleanCellValue); break;
+                case CellType.Error:
+                    dCell.SetCellValue(sCell.ErrorCellValue); break;
+                case CellType.Formula:
+                    dCell.SetCellFormula(sCell.CellFormula); break;
+                default: break;
+            }
+        }
+        private static void MergerRegion(ISheet sSheet, ISheet dSheet)
+        {
+            int sheetMergerCount = sSheet.NumMergedRegions; for (int i = 0; i < sheetMergerCount; i++)
+                dSheet.AddMergedRegion(sSheet.GetMergedRegion(i));
+        }
+        private static void ClonePrintSetup(ISheet sSheet, ISheet dSheet)
+        {        //工作表Sheet页面打印设置
+            dSheet.PrintSetup.Copies = 1;                               //打印份数
+            dSheet.PrintSetup.PaperSize = sSheet.PrintSetup.PaperSize;  //纸张大小
+            dSheet.PrintSetup.Landscape = sSheet.PrintSetup.Landscape;  //纸张方向：默认纵向false(横向true)
+            dSheet.PrintSetup.Scale = sSheet.PrintSetup.Scale;          //缩放方式比例
+            dSheet.PrintSetup.FitHeight = sSheet.PrintSetup.FitHeight;  //调整方式页高
+            dSheet.PrintSetup.FitWidth = sSheet.PrintSetup.FitWidth;    //调整方式页宽
+            dSheet.PrintSetup.FooterMargin = sSheet.PrintSetup.FooterMargin;
+            dSheet.PrintSetup.HeaderMargin = sSheet.PrintSetup.HeaderMargin;        //页边距        dSheet.SetMargin(MarginType.TopMargin, sSheet.GetMargin(MarginType.TopMargin));
+            dSheet.SetMargin(MarginType.BottomMargin, sSheet.GetMargin(MarginType.BottomMargin));
+            dSheet.SetMargin(MarginType.LeftMargin, sSheet.GetMargin(MarginType.LeftMargin));
+            dSheet.SetMargin(MarginType.RightMargin, sSheet.GetMargin(MarginType.RightMargin));
+            dSheet.SetMargin(MarginType.HeaderMargin, sSheet.GetMargin(MarginType.HeaderMargin));
+            dSheet.SetMargin(MarginType.FooterMargin, sSheet.GetMargin(MarginType.FooterMargin));        //页眉页脚
+            dSheet.Header.Left = sSheet.Header.Left;
+            dSheet.Header.Center = sSheet.Header.Center;
+            dSheet.Header.Right = sSheet.Header.Right;
+            dSheet.Footer.Left = sSheet.Footer.Left;
+            dSheet.Footer.Center = sSheet.Footer.Center;
+            dSheet.Footer.Right = sSheet.Footer.Right;        //工作表Sheet参数设置
+            dSheet.IsPrintGridlines = sSheet.IsPrintGridlines;          //true: 打印整表网格线。不单独设置CellStyle时外框实线内框虚线。 false: 自己设置网格线
+            dSheet.FitToPage = sSheet.FitToPage;                        //自适应页面
+            dSheet.HorizontallyCenter = sSheet.HorizontallyCenter;      //打印页面为水平居中
+            dSheet.VerticallyCenter = sSheet.VerticallyCenter;          //打印页面为垂直居中
+            dSheet.RepeatingRows = sSheet.RepeatingRows;                //工作表顶端标题行范围    }
+        }
+    }
+    */
 }

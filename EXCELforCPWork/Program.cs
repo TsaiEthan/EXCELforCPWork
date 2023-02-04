@@ -9,15 +9,16 @@ namespace EXCELforCPWork
 {
     internal class Program
     {
+        static string[] fileNames = new string[] { "保養表", "附件", "預保養表" };
         static void Main(string[] args)
         {
-            for (int monthToAdd = -1; monthToAdd < 1; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
+                string yearMonth = date.ToString("yyyy" + "年" + "MM" + "月");
                 string month = date.ToString("MM");
-                //string dirPath = @"H:\ChinPoonWork\";
                 string dirPath = System.IO.Directory.GetCurrentDirectory() + @"\";
-                string dirPathNewFolder = dirPath + month + "月";
+                string dirPathNewFolder = dirPath + yearMonth;
                 string dirPathMaintenanceForm = dirPathNewFolder + @"\保養表\";
                 string dirPathAppointmentMaintenanceForm = dirPathNewFolder + @"\後三月預保養表\";
                 string dirPathAttachment = dirPathNewFolder + @"\附件\";
@@ -31,6 +32,8 @@ namespace EXCELforCPWork
                 DoMaintenanceFormExcelFile(dirPath, dirPathMaintenanceForm, date, month, dirPathAttachment);
                 //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
+                //將多個檔案整合進單一檔案
+                CopySheetToExcel(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
             }
             Console.ReadLine();
         }
@@ -47,6 +50,63 @@ namespace EXCELforCPWork
                 Directory.CreateDirectory(dirPathAttachment);
                 Console.WriteLine("資料夾創建成功");
             }
+
+        }
+        static void CopySheetToExcel(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
+        {
+            //建立"保養表", "附件", "預保養表"
+            foreach (string name in fileNames)
+            {
+                IWorkbook newWorkBook = new HSSFWorkbook();
+                ISheet newSheet = newWorkBook.CreateSheet();
+                FileStream createFile = new FileStream(dirPathNewFolder + @"/" + name + ".xls", FileMode.Create, FileAccess.Write);
+                newWorkBook.Write(createFile, true);
+                Console.WriteLine(GetFileName(createFile.Name) + "寫入成功");
+                newWorkBook.Close();
+                createFile.Close();
+            }
+            
+            // 取得資料夾內所有檔案
+            DirectoryInfo directoryInfo = new DirectoryInfo(dirPathMaintenanceForm);
+            //所有EXCLE檔
+            FileInfo[] directoryFiles = directoryInfo.GetFiles("*.xls");
+            /*
+            FileStream readFile = new FileStream(directoryFiles[0].FullName, FileMode.Open, FileAccess.Read);
+            IWorkbook readWorkBook = new HSSFWorkbook(readFile);
+            ISheet readSheet = readWorkBook.GetSheetAt(0);
+            int firstRowNum = readSheet.FirstRowNum;
+            int lastRowNum = readSheet.LastRowNum;
+            int firstCellNum = readSheet.GetRow(0).FirstCellNum;
+            int lastCellNum = readSheet.GetRow(0).LastCellNum;
+
+            FileStream writeFile = new FileStream(dirPathNewFolder + @"/" + fileNames[0] + ".xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook writeWorkBook = new HSSFWorkbook(writeFile);
+            ISheet writeSheet = writeWorkBook.GetSheetAt(0);
+            writeWorkBook.SetSheetName(0, directoryFiles[0].Name.Substring(0, 3));
+            IRow row = writeSheet.CreateRow(lastRowNum);
+            //ICell cell = writeSheet.GetRow(0).CreateCell(lastCellNum);
+
+            readSheet.CopyTo(writeWorkBook, readSheet.SheetName.ToString(), true, true);
+            */
+            HSSFWorkbook workbookMerged = new HSSFWorkbook();
+
+            foreach (FileInfo file in directoryFiles)
+            {
+                HSSFWorkbook workbook;
+
+                FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+                workbook = new HSSFWorkbook(fs);
+                fs.Close();
+                for (int i = 0; i < workbook.NumberOfSheets; i++)
+                {
+                    ((HSSFSheet)workbook.GetSheetAt(i)).CopyTo(workbookMerged, file.Name.Substring(0, 3), true, true);
+                }
+
+            }
+
+            FileStream wfs = new FileStream(dirPathNewFolder + @"/" + "XS" + ".xls", FileMode.CreateNew, FileAccess.Write);
+            workbookMerged.Write(wfs);
+            wfs.Close();
         }
 
         static void DoMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month, string dirPathAttachment)
@@ -718,8 +778,8 @@ namespace EXCELforCPWork
                 for (int i = 3; i <= 10; i++)
                 {
                     workSheet.GetRow(6).GetCell(i).SetCellValue(randomSetCurrent + "A");
-                    //亂數產生實際電流值，介於(設定電流值的96%)~(設定電流值+2)
-                    int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.96), randomSetCurrent + 2);
+                    //亂數產生實際電流值，介於(設定電流值的95%)~(設定電流值+2)
+                    int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.95), randomSetCurrent + 2);
                     workSheet.GetRow(7).GetCell(i).SetCellValue(randomActualCurrent + "A");
                     double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
                     double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;

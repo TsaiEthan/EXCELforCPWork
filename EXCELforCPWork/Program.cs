@@ -61,7 +61,7 @@ namespace EXCELforCPWork
                 newWorkBook.Close();
                 createFile.Close();
             }
-            
+
             // 取得資料夾內所有檔案
             DirectoryInfo directoryInfo = new DirectoryInfo(dirPathMaintenanceForm);
             //所有EXCLE檔
@@ -110,14 +110,14 @@ namespace EXCELforCPWork
             try
             {
                 //開啟Excel 2003檔案
-                FileInfo[] directoryGFiles = new FileInfo[] { };
+                FileInfo directoryGFile = new FileInfo(dirPath + "G01~G26-設備定期保養項目表.xls"); ;
                 FileInfo[] directoryAFiles = new FileInfo[] { };
                 if (Directory.Exists(dirPath))
                 {
                     // 取得資料夾內所有檔案
                     DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
                     //所有G開頭的EXCLE檔
-                    directoryGFiles = directoryInfo.GetFiles("G*.xls");
+                    //directoryGFiles = directoryInfo.GetFiles("G01~G26*.xls");
                     directoryAFiles = directoryInfo.GetFiles("A*.xls");
                 }
                 int monthInteger = StringToInt(month);
@@ -130,326 +130,370 @@ namespace EXCELforCPWork
                 DateTime nextMonthFirstDay;
                 NextMonthFirstDay(date, out nextMonthFirstDay);
 
-                foreach (FileInfo directoryFile in directoryGFiles)
+                //複製檔案
+                if (!File.Exists(dirPathNewFolder + directoryGFile.Name))
                 {
-                    if (File.Exists(dirPath + directoryFile.Name))
-                    {
-                        FileStream file;
-                        IWorkbook workBook;
-                        ISheet workSheet;
-                        file = new FileStream(dirPath + directoryFile.Name, FileMode.Open, FileAccess.Read);                        
-                        workBook = new HSSFWorkbook(file);
-                        workSheet = workBook.GetSheetAt(0);
-                        
-                        ICellStyle cellStyle = workBook.CreateCellStyle();
-                        //置中的Style
-                        cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                        cellStyle.VerticalAlignment = VerticalAlignment.Center;
-                        IFont font = workBook.CreateFont();
-                        //字型
-                        font.FontName = "Times New Roman";
-                        //字體尺寸
-                        font.FontHeightInPoints = 16;
-                        //字體粗體
-                        font.IsBold = true;
-                        cellStyle.SetFont(font);
-
-                        IFont font2 = workBook.CreateFont();
-                        //字型
-                        font2.FontName = "Times New Roman";
-                        //字體尺寸
-                        font2.FontHeightInPoints = 16;
-                        //字體粗體
-                        font2.IsBold = false;
-
-                        //填入保養月份
-                        workSheet.GetRow(1).GetCell(3).SetCellValue(month);
-                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle;
-
-                        bool heaterCheck = false;
-                        HSSFSimpleShape circle1;
-                        for (int i = 3; i < workSheet.LastRowNum - 1; i++)
-                        {
-                            int x1 = 0;
-                            int x2 = 0;
-                            if (workSheet.GetRow(i).GetCell(6) == null)
-                            {
-                                workSheet.GetRow(i).CreateCell(6).SetCellValue("");
-                            }
-                                                       
-                            //表格中增加逗號
-                            if (workSheet.GetRow(i).GetCell(4) != null
-                                && workSheet.GetRow(i).GetCell(4).ToString() == "感測值≧500")
-                            {
-                                workSheet.GetRow(i).GetCell(7).SetCellValue(",");
-                            }
-                            string[] maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
-                            maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
-
-                            //單個月分圈起的位置
-                            if (maintenanceMonths.Length == 1 && maintenanceMonths[0] == month)
-                            {
-                                x1 = 430;
-                                x2 = 610;
-                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0);
-                            }
-                            else if (maintenanceMonths.Length == 2)
-                            {
-                                //兩個月分圈起的位置(位置1)
-                                if (monthInteger <= 6 && maintenanceMonths[0] == month)
-                                {
-                                    x1 = 350;
-                                    x2 = 530;
-                                }
-                                //兩個月分圈起的位置(位置2)
-                                else if (monthInteger >= 7 && maintenanceMonths[1] == month)
-                                {
-                                    x1 = 490;
-                                    x2 = 670;
-                                }
-                            }
-                            else if (maintenanceMonths.Length == 4)
-                            {
-                                //四個月分圈起的位置(位置1)
-                                if (monthInteger <= 3 && maintenanceMonths[0] == month)
-                                {
-                                    x1 = 200;
-                                    x2 = 380;
-                                }
-                                //四個月分圈起的位置(位置2)
-                                else if (monthInteger >= 4 && monthInteger <= 6 && maintenanceMonths[1] == month)
-                                {
-                                    x1 = 330;
-                                    x2 = 510;
-                                }
-                                //四個月分圈起的位置(位置3)
-                                else if (monthInteger >= 7 && monthInteger <= 9 && maintenanceMonths[2] == month)
-                                {
-                                    x1 = 440;
-                                    x2 = 620;
-                                }
-                                //四個月分圈起的位置(位置4)
-                                else if (monthInteger >= 10 && maintenanceMonths[3] == month)
-                                {
-                                    x1 = 610;
-                                    x2 = 790;
-                                }
-                            }
-                            //表格中圈起保養月及畫刪除線
-                            if (x1 != 0 && x2 != 0)
-                            {
-                                DrowingCircle(true, workBook, workSheet, i, x1, x2, 0, out circle1, ref heaterCheck);
-                            }
-                            else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
-                                    && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
-                            {
-                                DrowingLine(workSheet, i);
-                            }
-                            if(workSheet.GetRow(i).GetCell(6).ToString() != "")
-                                SetCellStyle(workBook, workSheet, i);
-                        }
-                        //抓取表單的名子
-                        string[] formName = directoryFile.Name.Split('-');
-                        //根據不同線別選定保養日期
-                        List<DateTime> executionDate = new List<DateTime>() { };
-                        List<DateTime> nextMonthExecutionDate = new List<DateTime>() { };
-                        switch (formName[0])
-                        {
-                            //DESMEAR#3，第1個星期四保
-                            case "G01":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
-                                break;
-                            //DESMEAR#4，第2個星期四保
-                            case "G02":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
-                                break;
-                            //DESMEAR#5，第2個星期五保
-                            case "G03":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
-                                break;
-                            //DEBURR#1，第3個星期五保
-                            case "G04":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Friday");
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G04", "DEBURR#1");
-                                break;
-                            //PTH#4，第2個星期三保
-                            case "G22":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Wednesday");
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G22", "PTH#4");
-                                break;
-                            //PTH#5，第2個星期一保
-                            case "G05":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G05", "PTH#5");
-                                break;
-                            //水5，第2個星期一保
-                            case "G07":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
-                                if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G07", "水5");
-                                }
-                                break;
-                            //PTH#6，第2個星期二保
-                            case "G06":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G06", "PTH#6");
-                                break;
-                            //水6，第2個星期二保
-                            case "G08":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
-                                if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G08", "水6");
-                                }
-                                break;
-                            //水7，第1個星期四保
-                            case "G09":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G09", "水7");
-                                }
-                                break;
-                            //水8，第1個星期一保
-                            case "G10":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Monday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G10", "水8");
-                                }
-                                break;
-                            //水9，第2個星期四保
-                            case "G11":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G11", "水9");
-                                }
-                                break;
-                            //水10，第1個星期三保
-                            case "G12":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Wednesday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Wednesday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G12", "水10");
-                                }
-                                break;
-                            //雷射孔微蝕#2，第3個星期二保
-                            case "G13":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
-                                break;
-                            //文坦讀孔機，第2個星期日保
-                            case "G18":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Sunday");
-                                break;
-                            //水11，第1個星期二保
-                            case "G24":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Tuesday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
-                                a01Count++;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G24", "水11");
-                                }
-                                break;
-                            //水12，第1個星期五保
-                            case "G25":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Friday");
-                                DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
-                                a01Count = 0;
-                                if (heaterCheck)
-                                    DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
-                                if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
-                                {
-                                    nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Friday");
-                                    DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G25", "水12");
-                                }
-                                break;
-                            //PLASMA，第2個星期五保
-                            case "G26":
-                                executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
-                                break;
-                        }
-
-                        //填入執行日期
-                        workSheet.GetRow(1).GetCell(8).SetCellValue(executionDate[0].ToString("yyyy   /    M    /    d"));
-                        workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
-                        //文坦讀孔機
-                        if (formName[0] == "G18")
-                        {
-                            MachineCodeDrowingCircle("G19", 640, 940, workBook, dirPathNewFolder, directoryFile);
-                            MachineCodeDrowingCircle("G20", 8, 238, workBook, dirPathNewFolder, directoryFile);
-                            MachineCodeDrowingCircle("G21", 310, 540, workBook, dirPathNewFolder, directoryFile);
-                            //For G18
-                            DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
-                        }
-                        //PLASMA
-                        else if (formName[0] == "G26")
-                        {
-                            MachineCodeDrowingCircle("G28", 398, 625, workBook, dirPathNewFolder, directoryFile);
-                            MachineCodeDrowingCircle("G29", 702, 932, workBook, dirPathNewFolder, directoryFile);
-                            //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
-                        }
-
-                        SetPrintStyle(workSheet);
-
-                        file = new FileStream(dirPathNewFolder + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file, true);
-                        Console.WriteLine(GetFileName(file.Name) + "寫入成功");
-                        workBook.Close();
-                        file.Close();
-                    }
-                    else
-                    {
-                        Console.WriteLine("Excel檔案不存在，未開啟");
-                    }
+                    /*
+                    FileStream copyFile = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
+                    IWorkbook copyWorkBook = new HSSFWorkbook(copyFile);
+                    copyFile = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.CreateNew, FileAccess.Write);
+                    copyWorkBook.Write(copyFile, true);
+                    copyFile.Close();
+                    copyWorkBook.Close();
+                    Console.WriteLine("檔案複製成功");
+                    */
+                    CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
                 }
+
+                FileStream file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.Open, FileAccess.Read);
+                IWorkbook workBook = new HSSFWorkbook(file);
+                file.Close();
+                ICellStyle cellStyle = workBook.CreateCellStyle();
+                //置中的Style
+                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                cellStyle.VerticalAlignment = VerticalAlignment.Center;
+                IFont font = workBook.CreateFont();
+                //字型
+                font.FontName = "Times New Roman";
+                //字體尺寸
+                font.FontHeightInPoints = 16;
+                //字體粗體
+                font.IsBold = true;
+                cellStyle.SetFont(font);
+
+                IFont font2 = workBook.CreateFont();
+                //字型
+                font2.FontName = "Times New Roman";
+                //字體尺寸
+                font2.FontHeightInPoints = 16;
+                //字體粗體
+                font2.IsBold = false;
+                for (int i = 0; i < workBook.NumberOfSheets; i++)
+                {
+                    ISheet workSheet = workBook.GetSheetAt(i);
+
+                    //填入保養月份
+                    workSheet.GetRow(1).GetCell(3).SetCellValue(month);
+                    workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle;
+
+                    bool heaterCheck = false;
+                    HSSFSimpleShape circle1;
+                    //圈保養月份及劃刪除線
+                    for (int j = 3; j < workSheet.LastRowNum - 1; j++)
+                    {
+                        int x1 = 0;
+                        int x2 = 0;
+                        if (workSheet.GetRow(j).GetCell(6) == null)
+                        {
+                            workSheet.GetRow(j).CreateCell(6).SetCellValue("");
+                        }
+
+                        //表格中增加逗號
+                        if (workSheet.GetRow(j).GetCell(4) != null
+                            && workSheet.GetRow(j).GetCell(4).ToString() == "感測值≧500")
+                        {
+                            workSheet.GetRow(j).GetCell(7).SetCellValue(",");
+                        }
+                        string[] maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
+                        maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
+
+                        //單個月分圈起的位置
+                        if (maintenanceMonths.Length == 1 && maintenanceMonths[0] == month)
+                        {
+                            x1 = 430;
+                            x2 = 610;
+                            DrowingCircle(true, workBook, workSheet, j, x1, x2, 0);
+                        }
+                        else if (maintenanceMonths.Length == 2)
+                        {
+                            //兩個月分圈起的位置(位置1)
+                            if (monthInteger <= 6 && maintenanceMonths[0] == month)
+                            {
+                                x1 = 350;
+                                x2 = 530;
+                            }
+                            //兩個月分圈起的位置(位置2)
+                            else if (monthInteger >= 7 && maintenanceMonths[1] == month)
+                            {
+                                x1 = 490;
+                                x2 = 670;
+                            }
+                        }
+                        else if (maintenanceMonths.Length == 4)
+                        {
+                            //四個月分圈起的位置(位置1)
+                            if (monthInteger <= 3 && maintenanceMonths[0] == month)
+                            {
+                                x1 = 200;
+                                x2 = 380;
+                            }
+                            //四個月分圈起的位置(位置2)
+                            else if (monthInteger >= 4 && monthInteger <= 6 && maintenanceMonths[1] == month)
+                            {
+                                x1 = 330;
+                                x2 = 510;
+                            }
+                            //四個月分圈起的位置(位置3)
+                            else if (monthInteger >= 7 && monthInteger <= 9 && maintenanceMonths[2] == month)
+                            {
+                                x1 = 440;
+                                x2 = 620;
+                            }
+                            //四個月分圈起的位置(位置4)
+                            else if (monthInteger >= 10 && maintenanceMonths[3] == month)
+                            {
+                                x1 = 610;
+                                x2 = 790;
+                            }
+                        }
+                        //表格中圈起保養月及畫刪除線
+                        if (x1 != 0 && x2 != 0)
+                        {
+                            DrowingCircle(true, workBook, workSheet, j, x1, x2, 0, out circle1, ref heaterCheck);
+                        }
+                        else if (workSheet.GetRow(j).GetCell(6).ToString() != ""
+                                && workSheet.GetRow(j).GetCell(6).ToString() != "1~12")
+                        {
+                            DrowingLine(workSheet, j);
+                        }
+                        if (workSheet.GetRow(j).GetCell(6).ToString() != "")
+                            SetCellStyle(workBook, workSheet, j);
+                    }
+
+                    //抓取表單的名子
+                    string[] formName = workSheet.SheetName.Split('-');
+                    //根據不同線別選定保養日期
+                    List<DateTime> executionDate = new List<DateTime>() { };
+                    List<DateTime> nextMonthExecutionDate = new List<DateTime>() { };
+                    switch (formName[0])
+                    {
+                        //DESMEAR#3，第1個星期四保
+                        case "G01":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
+                            break;
+                        //DESMEAR#4，第2個星期四保
+                        case "G02":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
+                            break;
+                        //DESMEAR#5，第2個星期五保
+                        case "G03":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
+                            break;
+                        //DEBURR#1，第3個星期五保
+                        case "G04":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Friday");
+                            if (heaterCheck)
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G04", "DEBURR#1");
+                            break;
+                        //PTH#4，第2個星期三保
+                        case "G22":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Wednesday");
+                            if (heaterCheck)
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G22", "PTH#4");
+                            break;
+                        //PTH#5，第2個星期一保
+                        case "G05":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
+                            if (heaterCheck)
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G05", "PTH#5");
+                            break;
+                        //水5，第2個星期一保
+                        case "G07":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Monday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G07", "水5");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G07", "水5");
+                            }
+                            break;
+                        //PTH#6，第2個星期二保
+                        case "G06":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G06", "PTH#6");
+                            }
+                            break;
+                        //水6，第2個星期二保
+                        case "G08":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G08", "水6");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(9).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G08", "水6");
+                            }
+                            break;
+                        //水7，第1個星期四保
+                        case "G09":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Thursday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G09", "水7");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G09", "水7");
+                            }
+                            break;
+                        //水8，第1個星期一保
+                        case "G10":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Monday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G10", "水8");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G10", "水8");
+                            }
+                            break;
+                        //水9，第2個星期四保
+                        case "G11":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Thursday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G11", "水9");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Thursday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G11", "水9");
+                            }
+                            break;
+                        //水10，第1個星期三保
+                        case "G12":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Wednesday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G12", "水10");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Wednesday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G12", "水10");
+                            }
+                            break;
+                        //雷射孔微蝕#2，第3個星期二保
+                        case "G13":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 3, "Tuesday");
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
+                            }
+                            break;
+                        //文坦讀孔機，第2個星期日保
+                        case "G18":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Sunday");
+                            break;
+                        //水11，第1個星期二保
+                        case "G24":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Tuesday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
+                            a01Count++;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G24", "水11");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Tuesday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G24", "水11");
+                            }
+                            break;
+                        //水12，第1個星期五保
+                        case "G25":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 1, "Friday");
+                            DoForm_A01(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
+                            a01Count = 0;
+                            if (heaterCheck)
+                            {
+                                DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G25", "水12");
+                            }
+                            if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
+                            {
+                                nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Friday");
+                                DoForm_A07A08(dirPath, dirPathNewFolder, directoryAFiles, nextMonthExecutionDate, "G25", "水12");
+                            }
+                            break;
+                        //PLASMA，第2個星期五保
+                        case "G26":
+                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
+                            break;
+                    }
+
+                    //填入執行日期
+                    workSheet.GetRow(1).GetCell(8).SetCellValue(executionDate[0].ToString("yyyy   /    M    /    d"));
+                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
+                    /*
+                    //文坦讀孔機
+                    if (formName[0] == "G18")
+                    {
+                        MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
+                        //For G18
+                        DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
+                    }
+                    //PLASMA
+                    else if (formName[0] == "G26")
+                    {
+                        MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
+                        //For G26
+                        DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                        DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
+                    }
+                    */
+                    SetPrintStyle(workSheet);
+                    workSheet.GetRow(0).CreateCell(25).SetAsActiveCell();
+                    workBook.SetActiveSheet(0);
+                    file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                    workBook.Write(file, true);
+
+                    file.Close();
+                }
+
+                Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+                workBook.Close();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
+            }
+        }
+        static void CopyFile(string sourceFile, string destinationFolder, FileInfo directoryFile)
+        {
+            //複製檔案
+            try
+            {
+                File.Copy(sourceFile, destinationFolder + directoryFile.Name, true);
+                Console.WriteLine(directoryFile.Name + "  檔案複製成功");
+            }
+            catch (IOException iox)
+            {
+                Console.WriteLine(iox.Message);
             }
         }
         static void SetPrintStyle(ISheet workSheet)
@@ -466,7 +510,7 @@ namespace EXCELforCPWork
         }
         static string GetFileName(string fullFileName)
         {
-            string[] fileNameWithoutPath = fullFileName.Split('\\');            
+            string[] fileNameWithoutPath = fullFileName.Split('\\');
             return fileNameWithoutPath[fileNameWithoutPath.Length - 1];
         }
         static void MonthFirstDayAndDays(DateTime date, out DateTime monthFirstDay, out int daysOfMonth)
@@ -517,34 +561,34 @@ namespace EXCELforCPWork
             cellStyleOriginal.SetFont(fontOriginal);
             workSheet.GetRow(i).GetCell(6).CellStyle = cellStyleOriginal;
         }
-        static void MachineCodeDrowingCircle(string machineCode, int x3, int x4, IWorkbook workBook, string dirPathNewFolder, FileInfo directoryFile)
+        static void MachineCodeDrowingCircle(string machineCode, int x3, int x4, IWorkbook workBook, ISheet workSheet, FileStream file)
         {
-            int machineCodeNumber = StringToInt(machineCode.Substring(1,2));
-            ISheet workSheet = workBook.GetSheetAt(0);
+            int machineCodeNumber = StringToInt(machineCode.Substring(1, 2));
             HSSFSimpleShape c1;
             HSSFSimpleShape c2 = null;
             HSSFPatriarch circle = DrowingCircle(false, workBook, workSheet, 28, x3, x4, machineCodeNumber, out c1);
             HSSFPatriarch circle2 = null;
             if (machineCodeNumber == 28)
                 circle2 = DrowingCircle(false, workBook, workSheet, 1, 324, 380, machineCodeNumber, out c2);
-            else if(machineCodeNumber == 29)
+            else if (machineCodeNumber == 29)
                 circle2 = DrowingCircle(false, workBook, workSheet, 1, 373, 428, machineCodeNumber, out c2);
             SetPrintStyle(workSheet);
-            FileStream newFile = new FileStream(dirPathNewFolder + machineCode + "-" + directoryFile.Name, FileMode.Create, FileAccess.Write);
-            workBook.Write(newFile, true);
+            workBook.Write(file, true);
             circle.RemoveShape(c1);
-            if (machineCodeNumber == 28 || machineCodeNumber == 29) 
+            if (machineCodeNumber == 28 || machineCodeNumber == 29)
                 circle2.RemoveShape(c2);
         }
         static void DoForm_A01(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            FileStream file;
-            if (!File.Exists(dirPathNewFolder + "A01-亞碩競銘線纜線熱顯像檢查表.xls"))
-                file = new FileStream(dirPath + directoryAFiles[0].Name, FileMode.Open, FileAccess.Read);
-            else
-                file = new FileStream(dirPathNewFolder + "A01-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            
+            FileInfo directoryAFile = new FileInfo(dirPath + "A01-亞碩競銘線纜線熱顯像檢查表.xls");
+            //複製檔案
+            if (!File.Exists(dirPathNewFolder + directoryAFile.Name))
+                CopyFile(directoryAFile.FullName, dirPathNewFolder, directoryAFile);
+
+            FileStream file = new FileStream(dirPathNewFolder + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+
             IWorkbook workBook = new HSSFWorkbook(file);
+            file.Close();
             ISheet workSheet = workBook.GetSheetAt(0);
             ISheet newWorkSheet;
             if (workSheet.SheetName != "熱顯像檢查表")
@@ -592,11 +636,11 @@ namespace EXCELforCPWork
                     newWorkSheet.GetRow(i + 1).GetCell(5).SetCellValue("端子      -     ℃");
                 }
             }
-            
 
             SetPrintStyle(workSheet);
+            workSheet.GetRow(0).CreateCell(25).SetAsActiveCell();
             workBook.SetActiveSheet(0);
-            file = new FileStream(dirPathNewFolder + "A01-亞碩競銘線纜線熱顯像檢查表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            file = new FileStream(dirPathNewFolder + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             workBook.Close();
@@ -604,80 +648,99 @@ namespace EXCELforCPWork
         }
         static void DoForm_A02ToA06(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            FileStream file;
-            IWorkbook workBook = null;
-            ISheet workSheet;
+            /*
             string machineName = "";
-            string openPath = "", writePath = "";
-            string openPath2 = "", writePath2 = "";
+            string openSheetName = "", openSheetName2 = "";
+            int cloneSheetIndex = 0, cloneSheetIndex2 = 0; ;
+            //string openPath2 = "", writePath2 = "";
             //FOR VCP
             if (lineName == "水5" || lineName == "水6")
             {
                 machineName = "水平電鍍線(VCP)(" + lineName.Remove(0, 1) + ")線";
-                openPath = dirPath + directoryAFiles[1].Name;
-                writePath = dirPathNewFolder + "A02-" + machineCode + "-" + lineName + "-水平電鍍線(VCP)設備性能檢測數值記錄表.xls";
+                openSheetName = "VCP";
+                cloneSheetIndex = 0;
             }
             //FOR SVCP
             else if (lineName == "水7" || lineName == "水8" || lineName == "水9" || lineName == "水10" || lineName == "水11" || lineName == "水12")
             {
                 machineName = "水平電鍍線(SVCP)(" + lineName.Remove(0, 1) + ")線";
-                openPath = dirPath + directoryAFiles[2].Name;
-                writePath = dirPathNewFolder + "A03-" + machineCode + "-" + lineName + "-水平電鍍線(SVCP)設備性能檢測數值記錄表.xls";
+                openSheetName = "SVCP";
+                cloneSheetIndex = 1;
             }
             //FOR PTH
             else if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
                 machineName = "水平PTH(" + lineName.Remove(0, 4) + ")線";
-                openPath = dirPath + directoryAFiles[3].Name;
-                writePath = dirPathNewFolder + "A041-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
-
-                openPath2 = dirPath + directoryAFiles[4].Name;
-                writePath2 = dirPathNewFolder + "A042-" + machineCode + "-" + lineName + "-PTH設備性能檢測數值記錄表.xls";
+                openSheetName = "PTH_1";
+                openSheetName2 = "PTH_2";
+                cloneSheetIndex = 2;
+                cloneSheetIndex2 = 3;
             }
             //FOR DEBURR#1
             else if (lineName == "DEBURR#1")
             {
                 machineName = "DEBURR(1)線";
-                openPath = dirPath + directoryAFiles[5].Name;
-                writePath = dirPathNewFolder + "A05-" + machineCode + "-" + lineName + "-DEBURR設備性能檢測數值記錄表.xls";
+                openSheetName = "DEBURR";
+                cloneSheetIndex = 4;
             }
             //FOR 雷射孔微蝕#2
             else if (lineName == "雷射孔微蝕#2")
             {
                 machineName = "雷射孔微蝕(2)線";
-                openPath = dirPath + directoryAFiles[6].Name;
-                writePath = dirPathNewFolder + "A06-" + machineCode + "-" + lineName + "-雷射孔微蝕設備性能檢測數值記錄表.xls";
+                openSheetName = "雷燒微蝕";
+                cloneSheetIndex = 5;
             }
 
-            file = new FileStream(openPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);            
-            workBook = new HSSFWorkbook(file);
-            workSheet = workBook.GetSheetAt(0);
+            FileStream file;
+            if (!File.Exists(dirPathNewFolder + "A02~A06-設備性能檢測數值記錄表.xls"))
+                file = new FileStream(dirPath + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.Open, FileAccess.Read);
+            else
+                file = new FileStream(dirPathNewFolder + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook workBook = new HSSFWorkbook(file);
+            ISheet workSheet = workBook.GetSheetAt(0);
+            ISheet newWorkSheet;
+            if (workSheet.SheetName != "VCP")
+            {
+                newWorkSheet = workBook.CloneSheet(cloneSheetIndex);
+                workBook.SetSheetName(0, lineName);
+                workBook.SetActiveSheet(0);
+            }
+            else
+            {
+                newWorkSheet = workBook.GetSheetAt(0);
+                workBook.SetSheetName(0, lineName);
+            }
+            newWorkSheet.GetRow(0).GetCell(0).SetCellValue(lineName);
 
-            workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
-            workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
+            newWorkSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
+            newWorkSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
-            SetPrintStyle(workSheet);
+            SetPrintStyle(newWorkSheet);
 
-            file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
+            //file = new FileStream(writePath, FileMode.Create, FileAccess.Write);
+            file = new FileStream(dirPathNewFolder + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
             workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
-                file = new FileStream(openPath2, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                //file = new FileStream(openPath2, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 workBook = new HSSFWorkbook(file);
-                workSheet = workBook.GetSheetAt(0);
+                newWorkSheet = workBook.CloneSheet(cloneSheetIndex2);
+                workBook.SetSheetName(0, lineName);
+                workBook.SetActiveSheet(0);
 
-                workSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
-                workSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
+                newWorkSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
+                newWorkSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
-                SetPrintStyle(workSheet);
+                SetPrintStyle(newWorkSheet);
 
-                file = new FileStream(writePath2, FileMode.Create, FileAccess.Write);
+                file = new FileStream(dirPathNewFolder + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 workBook.Write(file, true);
                 Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             }
             workBook.Close();
             file.Close();
+            */
         }
         static bool DoCurrentCheckForm(string storageGridWords, DateTime date)
         {
@@ -720,9 +783,9 @@ namespace EXCELforCPWork
             {
                 gridRow = 1;
                 gridColumn = 15;
-                if(lineName == "水5")
+                if (lineName == "水5")
                     checkBoxIndex = 9;
-                else if(lineName == "水6")
+                else if (lineName == "水6")
                     checkBoxIndex = 21;
             }
             //FOR 水7~水12
@@ -871,7 +934,7 @@ namespace EXCELforCPWork
                     directoryAFiles = directoryInfo.GetFiles("A*.xls");
                 }
                 int monthInteger = StringToInt(month);
-                int[] monthAdd = new int[3] { monthInteger + 1, monthInteger + 2, monthInteger + 3};
+                int[] monthAdd = new int[3] { monthInteger + 1, monthInteger + 2, monthInteger + 3 };
                 for (int j = 0; j < 3; j++)
                 {
                     if (monthAdd[j] > 12)
@@ -930,7 +993,7 @@ namespace EXCELforCPWork
                         workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
 
                         for (int i = 3; i < workSheet.LastRowNum - 1; i++)
-                        {                            
+                        {
                             if (workSheet.GetRow(i).GetCell(6) == null)
                             {
                                 workSheet.GetRow(i).CreateCell(6).SetCellValue("");
@@ -1026,17 +1089,17 @@ namespace EXCELforCPWork
                         //文坦讀孔機
                         if (formName[0] == "G18")
                         {
-                            MachineCodeDrowingCircle("G19", 640, 940, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G20", 8, 238, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G21", 310, 540, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
+                            MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
+                            MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
                             //For G18
                             DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
                         }
                         //PLASMA
                         else if (formName[0] == "G26")
                         {
-                            MachineCodeDrowingCircle("G28", 398, 625, workBook, folderPath, directoryFile);
-                            MachineCodeDrowingCircle("G29", 702, 932, workBook, folderPath, directoryFile);
+                            MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
+                            MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
                             //For G26
                             DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
                             DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
@@ -1073,14 +1136,14 @@ namespace EXCELforCPWork
         {
             //heaterCheck = false;
             int initial = 6;
-            if(machineCodeNumber == 18 || machineCodeNumber == 19)
+            if (machineCodeNumber == 18 || machineCodeNumber == 19)
             {
                 initial = 8;
             }
             else if (machineCodeNumber == 20 || machineCodeNumber == 21
                      || machineCodeNumber == 26 || machineCodeNumber == 28 || machineCodeNumber == 29)
             {
-                if(i == 28)
+                if (i == 28)
                     initial = 9;
                 else
                     initial = 1;
@@ -1111,7 +1174,7 @@ namespace EXCELforCPWork
                 if (workSheet.GetRow(i).GetCell(2).ToString() == "附檢測資料")
                 {
                     heaterCheck = true;
-                }              
+                }
             }
             return patriarchCircle;
         }

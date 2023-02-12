@@ -903,10 +903,10 @@ namespace EXCELforCPWork
                 IWorkbook workBook = new HSSFWorkbook(file);
                 file.Close();
                 HSSFSimpleShape circle1;
-                ICellStyle cellStyle2 = workBook.CreateCellStyle();
+                ICellStyle cellStyle = workBook.CreateCellStyle();
                 //置中的Style
-                cellStyle2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                cellStyle2.VerticalAlignment = VerticalAlignment.Center;
+                cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                cellStyle.VerticalAlignment = VerticalAlignment.Center;
                 IFont font = workBook.CreateFont();
                 //字型
                 font.FontName = "Times New Roman";
@@ -914,7 +914,7 @@ namespace EXCELforCPWork
                 font.FontHeightInPoints = 16;
                 //字體粗體
                 font.IsBold = true;
-                cellStyle2.SetFont(font);
+                cellStyle.SetFont(font);
 
                 IFont font2 = workBook.CreateFont();
                 //字型
@@ -941,7 +941,7 @@ namespace EXCELforCPWork
 
                     //填入保養月份
                     workSheet.GetRow(1).GetCell(3).SetCellValue(monthAddOne + "、" + monthAddTwo + "、" + monthAddThree);
-                    workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle2;
+                    workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle;
 
                     //填入預保養執行日期
                     DateTime lastWorkDate = date.AddMonths(1).AddDays(-DateTime.Now.Day);
@@ -1072,6 +1072,8 @@ namespace EXCELforCPWork
                     }
                     */
                     SetPrintStyle(workSheet);
+                    workSheet.GetRow(0).CreateCell(25).SetAsActiveCell();
+                    workBook.SetActiveSheet(0);
                     file = new FileStream(dirPathNewFolder + "後三月預保養表.xls", FileMode.Create, FileAccess.Write);
                     workBook.Write(file, true);
                     file.Close();

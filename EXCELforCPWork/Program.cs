@@ -32,9 +32,7 @@ namespace EXCELforCPWork
                 //製作保養表及產生相關附件
                 DoMaintenanceFormExcelFile(dirPath, dirPathNewFolder, date, month);
                 //製作預保養表
-                //DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathAppointmentMaintenanceForm, date, month);
-                //將多個檔案整合進單一檔案
-                //CopySheetToExcel(dirPathNewFolder, dirPathMaintenanceForm, dirPathAppointmentMaintenanceForm, dirPathAttachment);
+                DoAppointmentMaintenanceFormExcelFile(dirPath, dirPathNewFolder, date, month);
             }
             Console.ReadLine();
         }
@@ -48,63 +46,6 @@ namespace EXCELforCPWork
                 Console.WriteLine("資料夾創建成功");
             }
         }
-        static void CopySheetToExcel(string dirPathNewFolder, string dirPathMaintenanceForm, string dirPathAppointmentMaintenanceForm, string dirPathAttachment)
-        {
-            //建立"保養表", "附件", "預保養表"
-            foreach (string name in fileNames)
-            {
-                IWorkbook newWorkBook = new HSSFWorkbook();
-                ISheet newSheet = newWorkBook.CreateSheet();
-                FileStream createFile = new FileStream(dirPathNewFolder + @"/" + name + ".xls", FileMode.Create, FileAccess.Write);
-                newWorkBook.Write(createFile, true);
-                Console.WriteLine(GetFileName(createFile.Name) + "寫入成功");
-                newWorkBook.Close();
-                createFile.Close();
-            }
-
-            // 取得資料夾內所有檔案
-            DirectoryInfo directoryInfo = new DirectoryInfo(dirPathMaintenanceForm);
-            //所有EXCLE檔
-            FileInfo[] directoryFiles = directoryInfo.GetFiles("*.xls");
-            /*
-            FileStream readFile = new FileStream(directoryFiles[0].FullName, FileMode.Open, FileAccess.Read);
-            IWorkbook readWorkBook = new HSSFWorkbook(readFile);
-            ISheet readSheet = readWorkBook.GetSheetAt(0);
-            int firstRowNum = readSheet.FirstRowNum;
-            int lastRowNum = readSheet.LastRowNum;
-            int firstCellNum = readSheet.GetRow(0).FirstCellNum;
-            int lastCellNum = readSheet.GetRow(0).LastCellNum;
-
-            FileStream writeFile = new FileStream(dirPathNewFolder + @"/" + fileNames[0] + ".xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            IWorkbook writeWorkBook = new HSSFWorkbook(writeFile);
-            ISheet writeSheet = writeWorkBook.GetSheetAt(0);
-            writeWorkBook.SetSheetName(0, directoryFiles[0].Name.Substring(0, 3));
-            IRow row = writeSheet.CreateRow(lastRowNum);
-            //ICell cell = writeSheet.GetRow(0).CreateCell(lastCellNum);
-
-            readSheet.CopyTo(writeWorkBook, readSheet.SheetName.ToString(), true, true);
-            */
-            HSSFWorkbook workbookMerged = new HSSFWorkbook();
-
-            foreach (FileInfo file in directoryFiles)
-            {
-                HSSFWorkbook workbook;
-
-                FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
-                workbook = new HSSFWorkbook(fs);
-                fs.Close();
-                for (int i = 0; i < workbook.NumberOfSheets; i++)
-                {
-                    ((HSSFSheet)workbook.GetSheetAt(i)).CopyTo(workbookMerged, file.Name.Substring(0, 3), true, true);
-                }
-
-            }
-
-            FileStream wfs = new FileStream(dirPathNewFolder + @"/" + "XS" + ".xls", FileMode.OpenOrCreate, FileAccess.Write);
-            workbookMerged.Write(wfs);
-            wfs.Close();
-        }
-
         static void DoMaintenanceFormExcelFile(string dirPath, string dirPathNewFolder, DateTime date, string month)
         {
             try
@@ -116,8 +57,7 @@ namespace EXCELforCPWork
                 {
                     // 取得資料夾內所有檔案
                     DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
-                    //所有G開頭的EXCLE檔
-                    //directoryGFiles = directoryInfo.GetFiles("G01~G26*.xls");
+                    //所有A開頭的EXCLE檔
                     directoryAFiles = directoryInfo.GetFiles("A*.xls");
                 }
                 int monthInteger = StringToInt(month);
@@ -143,6 +83,7 @@ namespace EXCELforCPWork
                     Console.WriteLine("檔案複製成功");
                     */
                     CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
+                    Console.WriteLine("檔案複製成功");
                 }
 
                 FileStream file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.Open, FileAccess.Read);
@@ -753,29 +694,30 @@ namespace EXCELforCPWork
             }
             return doCurrentCheckForm;
         }
-        static void DoForm_A07A08(string dirPath, string dirPathAttachment, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
+        static void DoForm_A07A08(string dirPath, string dirPathNewFolder, FileInfo[] directoryAFiles, List<DateTime> executionDate, string machineCode, string lineName)
         {
-            //設定開啟及儲存的路徑跟檔名
-            string openPath = "", writePath = "", writePath2 = "";
-            //FOR PTH#5、PTH#6
-            if (lineName == "水5" || lineName == "水6")
+            FileInfo directoryAFile = new FileInfo(dirPath + "A07~A08電流比對紀錄表.xls");
+            //複製檔案
+            if (!File.Exists(dirPathNewFolder + directoryAFile.Name))
+                CopyFile(directoryAFile.FullName, dirPathNewFolder, directoryAFile);
+
+            FileStream file = new FileStream(dirPathNewFolder + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            IWorkbook workBook = new HSSFWorkbook(file);
+            file.Close();
+            ISheet workSheet = workBook.GetSheetAt(0);
+            ISheet newWorkSheet;
+            if (machineCode == "G05" || machineCode == "G06")
             {
-                openPath = dirPath + directoryAFiles[7].Name;
-                writePath = dirPathAttachment + "A07-" + machineCode + "-" + lineName + "-PTH電流比對紀錄表.xls";
+                newWorkSheet = workBook.CloneSheet(0);
+                workBook.SetSheetName(workBook.NumberOfSheets - 1, lineName);
+                workBook.SetActiveSheet(workBook.NumberOfSheets - 1);
             }
-            //FOR 奇數水平電鍍線(水7、水9、水11)
-            else if (lineName == "水7" || lineName == "水9" || lineName == "水11")
+            else
             {
-                openPath = dirPath + directoryAFiles[8].Name;
-                writePath = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "-水平電鍍線電流比對紀錄表.xls";
+                newWorkSheet = workBook.GetSheetAt(0);
+                workBook.SetSheetName(0, lineName);
             }
-            //FOR 偶數水平電鍍線(水8、水10、水12)
-            else if (lineName == "水8" || lineName == "水10" || lineName == "水12")
-            {
-                openPath = dirPath + directoryAFiles[8].Name;
-                writePath = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "A-水平電鍍線電流比對紀錄表.xls";
-                writePath2 = dirPathAttachment + "A08-" + machineCode + "-" + lineName + "B-水平電鍍線電流比對紀錄表.xls";
-            }
+            newWorkSheet.GetRow(0).GetCell(0).SetCellValue(lineName);
 
             int gridRow = 0, gridColumn = 0, checkBoxIndex = 0, checkBoxIndexA = 0, checkBoxIndexB = 0;
             //FOR PTH#5、PTH#6
@@ -822,9 +764,9 @@ namespace EXCELforCPWork
                         break;
                 }
             }
-            DoA07A08Form(openPath, writePath, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexA);
-            if (lineName == "水8" || lineName == "水10" || lineName == "水12")
-                DoA07A08Form(openPath, writePath2, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexB);
+            //DoA07A08Form(openPath, writePath, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexA);
+            //if (lineName == "水8" || lineName == "水10" || lineName == "水12")
+            //DoA07A08Form(openPath, writePath2, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexB);
         }
         static void DoA07A08Form(string openPath, string writePath, int gridRow, int gridColumn, DateTime executionDate, string lineName, int checkBoxIndex, int checkBoxIndexAB)
         {
@@ -841,8 +783,8 @@ namespace EXCELforCPWork
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
                      || lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
-                //亂數產生設定電流值後填表，介於540~1250
-                RandomCurrent(workSheet, 540, 1250, 10, 6);
+                //亂數產生設定電流值後填表，介於540~1450
+                RandomCurrent(workSheet, 540, 1450, 10, 6);
             }
 
             //填入執行日期
@@ -918,204 +860,224 @@ namespace EXCELforCPWork
                 workSheet.GetRow(startRow + 2).GetCell(i).SetCellValue(errorPercent + "%");
             }
         }
-        static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string folderPath, DateTime date, string month)
+        static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string dirPathNewFolder, DateTime date, string month)
         {
             try
             {
                 //開啟Excel 2003檔案
-                FileInfo[] directoryGFiles = new FileInfo[] { };
+                FileInfo directoryGFile = new FileInfo(dirPath + "G01~G26-設備定期保養項目表.xls"); ;
                 FileInfo[] directoryAFiles = new FileInfo[] { };
                 if (Directory.Exists(dirPath))
                 {
                     // 取得資料夾內所有檔案
                     DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
-                    //所有G開頭的EXCLE檔
-                    directoryGFiles = directoryInfo.GetFiles("G*.xls");
+                    //所有A開頭的EXCLE檔
                     directoryAFiles = directoryInfo.GetFiles("A*.xls");
                 }
+
+                //獲取月份第一日及天數
+                DateTime monthFirstDay;
+                int daysOfMonth;
+                MonthFirstDayAndDays(date, out monthFirstDay, out daysOfMonth);
+                //獲取下個月份第一日
+                DateTime nextMonthFirstDay;
+                NextMonthFirstDay(date, out nextMonthFirstDay);
+
+                //複製檔案
+                if (!File.Exists(dirPathNewFolder + "後三月預保養表.xls"))
+                {
+                    /*
+                    FileStream copyFile = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
+                    IWorkbook copyWorkBook = new HSSFWorkbook(copyFile);
+                    copyFile = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.CreateNew, FileAccess.Write);
+                    copyWorkBook.Write(copyFile, true);
+                    copyFile.Close();
+                    copyWorkBook.Close();
+                    Console.WriteLine("檔案複製成功");
+                    */
+                    CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
+                    Console.WriteLine("檔案複製成功");
+                }
+
+                FileStream file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.Open, FileAccess.Read);
+                IWorkbook workBook = new HSSFWorkbook(file);
+                file.Close();
+                HSSFSimpleShape circle1;
+                ICellStyle cellStyle2 = workBook.CreateCellStyle();
+                //置中的Style
+                cellStyle2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+                cellStyle2.VerticalAlignment = VerticalAlignment.Center;
+                IFont font = workBook.CreateFont();
+                //字型
+                font.FontName = "Times New Roman";
+                //字體尺寸
+                font.FontHeightInPoints = 16;
+                //字體粗體
+                font.IsBold = true;
+                cellStyle2.SetFont(font);
+
+                IFont font2 = workBook.CreateFont();
+                //字型
+                font2.FontName = "Times New Roman";
+                //字體尺寸
+                font2.FontHeightInPoints = 16;
+                //字體粗體
+                font2.IsBold = false;
+
                 int monthInteger = StringToInt(month);
                 int[] monthAdd = new int[3] { monthInteger + 1, monthInteger + 2, monthInteger + 3 };
-                for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 3; k++)
                 {
-                    if (monthAdd[j] > 12)
-                        monthAdd[j] = monthAdd[j] - 12;
+                    if (monthAdd[k] > 12)
+                        monthAdd[k] = monthAdd[k] - 12;
                 }
                 string monthAddOne = (monthAdd[0]).ToString();
                 string monthAddTwo = (monthAdd[1]).ToString();
                 string monthAddThree = (monthAdd[2]).ToString();
-                foreach (FileInfo directoryFile in directoryGFiles)
+
+                for (int j = 0; j < workBook.NumberOfSheets; j++)
                 {
-                    if (File.Exists(dirPath + directoryFile.Name))
+                    ISheet workSheet = workBook.GetSheetAt(j);
+
+                    //填入保養月份
+                    workSheet.GetRow(1).GetCell(3).SetCellValue(monthAddOne + "、" + monthAddTwo + "、" + monthAddThree);
+                    workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle2;
+
+                    //填入預保養執行日期
+                    DateTime lastWorkDate = date.AddMonths(1).AddDays(-DateTime.Now.Day);
+                    if (lastWorkDate.DayOfWeek == DayOfWeek.Saturday)
                     {
-                        FileStream file;
-                        IWorkbook workBook;
-                        ISheet workSheet;
-                        file = new FileStream(dirPath + directoryFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                        workBook = new HSSFWorkbook(file);
-                        workSheet = workBook.GetSheetAt(0);
-                        HSSFSimpleShape circle1;
-                        ICellStyle cellStyle2 = workBook.CreateCellStyle();
-                        //置中的Style
-                        cellStyle2.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
-                        cellStyle2.VerticalAlignment = VerticalAlignment.Center;
-                        IFont font = workBook.CreateFont();
-                        //字型
-                        font.FontName = "Times New Roman";
-                        //字體尺寸
-                        font.FontHeightInPoints = 16;
-                        //字體粗體
-                        font.IsBold = true;
-                        cellStyle2.SetFont(font);
-
-                        IFont font2 = workBook.CreateFont();
-                        //字型
-                        font2.FontName = "Times New Roman";
-                        //字體尺寸
-                        font2.FontHeightInPoints = 16;
-                        //字體粗體
-                        font2.IsBold = false;
-
-                        //填入保養月份
-                        workSheet.GetRow(1).GetCell(3).SetCellValue(monthAddOne + "、" + monthAddTwo + "、" + monthAddThree);
-                        workSheet.GetRow(1).GetCell(3).CellStyle = cellStyle2;
-
-                        //填入預保養執行日期
-                        DateTime lastWorkDate = date.AddMonths(1).AddDays(-DateTime.Now.Day);
-                        if (lastWorkDate.DayOfWeek == DayOfWeek.Saturday)
-                        {
-                            lastWorkDate = lastWorkDate.AddDays(-1);
-                        }
-                        else if (lastWorkDate.DayOfWeek == DayOfWeek.Sunday)
-                        {
-                            lastWorkDate = lastWorkDate.AddDays(-2);
-                        }
-                        workSheet.GetRow(1).GetCell(8).SetCellValue(lastWorkDate.ToString("yyyy   /    M    /   dd"));
-                        workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
-
-                        for (int i = 3; i < workSheet.LastRowNum - 1; i++)
-                        {
-                            if (workSheet.GetRow(i).GetCell(6) == null)
-                            {
-                                workSheet.GetRow(i).CreateCell(6).SetCellValue("");
-                            }
-                            string[] maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
-                            int x1 = 0;
-                            int x2 = 0;
-                            //單個月分圈起的位置
-                            if (maintenanceMonths.Length == 1)
-                            {
-                                if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
-                                {
-                                    x1 = 430;
-                                    x2 = 610;
-                                    DrowingCircle(false, workBook, workSheet, i, x1, x2, 0, out circle1);
-                                }
-                            }
-                            else if (maintenanceMonths.Length == 2)
-                            {
-                                //兩個月分圈起的位置(位置1)
-                                if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[0]) <= 6)
-                                    {
-                                        x1 = 350;
-                                        x2 = 530;
-                                    }
-                                }
-                                //兩個月分圈起的位置(位置2)
-                                else if (maintenanceMonths[1] == monthAddOne || maintenanceMonths[1] == monthAddTwo || maintenanceMonths[1] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[1]) >= 7)
-                                    {
-                                        x1 = 490;
-                                        x2 = 670;
-                                    }
-                                }
-                            }
-                            else if (maintenanceMonths.Length == 4)
-                            {
-                                //四個月分圈起的位置(位置1)
-                                if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[0]) <= 3)
-                                    {
-                                        x1 = 200;
-                                        x2 = 380;
-                                    }
-                                }
-                                //四個月分圈起的位置(位置2)
-                                else if (maintenanceMonths[1] == monthAddOne || maintenanceMonths[1] == monthAddTwo || maintenanceMonths[1] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[1]) >= 4 && StringToInt(maintenanceMonths[1]) <= 6)
-                                    {
-                                        x1 = 330;
-                                        x2 = 510;
-                                    }
-                                }
-                                //四個月分圈起的位置(位置3)
-                                else if (maintenanceMonths[2] == monthAddOne || maintenanceMonths[2] == monthAddTwo || maintenanceMonths[2] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[2]) >= 7 && StringToInt(maintenanceMonths[2]) <= 9)
-                                    {
-                                        x1 = 440;
-                                        x2 = 620;
-                                    }
-                                }
-                                //四個月分圈起的位置(位置4)
-                                else if (maintenanceMonths[3] == monthAddOne || maintenanceMonths[3] == monthAddTwo || maintenanceMonths[3] == monthAddThree)
-                                {
-                                    if (StringToInt(maintenanceMonths[3]) >= 10)
-                                    {
-                                        x1 = 610;
-                                        x2 = 790;
-                                    }
-                                }
-                            }
-                            //表格中圈起保養月及畫刪除線
-                            if (x1 != 0 && x2 != 0)
-                            {
-                                DrowingCircle(false, workBook, workSheet, i, x1, x2, 0);
-                            }
-                            else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
-                                    && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
-                            {
-                                DrowingLine(workSheet, i);
-                            }
-                            if (workSheet.GetRow(i).GetCell(6).ToString() != "")
-                                SetCellStyle(workBook, workSheet, i);
-                        }
-                        //抓取表單的名子
-                        string[] formName = directoryFile.Name.Split('-');
-                        //文坦讀孔機
-                        if (formName[0] == "G18")
-                        {
-                            MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
-                            MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
-                            MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
-                            //For G18
-                            DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
-                        }
-                        //PLASMA
-                        else if (formName[0] == "G26")
-                        {
-                            MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
-                            MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
-                            //For G26
-                            DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
-                            DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
-                        }
-                        SetPrintStyle(workSheet);
-                        file = new FileStream(folderPath + directoryFile.Name, FileMode.Create, FileAccess.Write);
-                        workBook.Write(file, true);
-                        Console.WriteLine(GetFileName(file.Name) + "寫入成功");
-                        workBook.Close();
-                        file.Close();
+                        lastWorkDate = lastWorkDate.AddDays(-1);
                     }
-                    else
+                    else if (lastWorkDate.DayOfWeek == DayOfWeek.Sunday)
                     {
-                        Console.WriteLine("Excel檔案不存在，未開啟");
+                        lastWorkDate = lastWorkDate.AddDays(-2);
                     }
+                    workSheet.GetRow(1).GetCell(8).SetCellValue(lastWorkDate.ToString("yyyy   /    M    /   dd"));
+                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
+
+                    for (int i = 3; i < workSheet.LastRowNum - 1; i++)
+                    {
+                        if (workSheet.GetRow(i).GetCell(6) == null)
+                        {
+                            workSheet.GetRow(i).CreateCell(6).SetCellValue("");
+                        }
+                        string[] maintenanceMonths = workSheet.GetRow(i).GetCell(6).ToString().Split(',');
+                        int x1 = 0;
+                        int x2 = 0;
+                        //單個月分圈起的位置
+                        if (maintenanceMonths.Length == 1)
+                        {
+                            if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
+                            {
+                                x1 = 430;
+                                x2 = 610;
+                                DrowingCircle(false, workBook, workSheet, i, x1, x2, 0, out circle1);
+                            }
+                        }
+                        else if (maintenanceMonths.Length == 2)
+                        {
+                            //兩個月分圈起的位置(位置1)
+                            if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[0]) <= 6)
+                                {
+                                    x1 = 350;
+                                    x2 = 530;
+                                }
+                            }
+                            //兩個月分圈起的位置(位置2)
+                            else if (maintenanceMonths[1] == monthAddOne || maintenanceMonths[1] == monthAddTwo || maintenanceMonths[1] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[1]) >= 7)
+                                {
+                                    x1 = 490;
+                                    x2 = 670;
+                                }
+                            }
+                        }
+                        else if (maintenanceMonths.Length == 4)
+                        {
+                            //四個月分圈起的位置(位置1)
+                            if (maintenanceMonths[0] == monthAddOne || maintenanceMonths[0] == monthAddTwo || maintenanceMonths[0] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[0]) <= 3)
+                                {
+                                    x1 = 200;
+                                    x2 = 380;
+                                }
+                            }
+                            //四個月分圈起的位置(位置2)
+                            else if (maintenanceMonths[1] == monthAddOne || maintenanceMonths[1] == monthAddTwo || maintenanceMonths[1] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[1]) >= 4 && StringToInt(maintenanceMonths[1]) <= 6)
+                                {
+                                    x1 = 330;
+                                    x2 = 510;
+                                }
+                            }
+                            //四個月分圈起的位置(位置3)
+                            else if (maintenanceMonths[2] == monthAddOne || maintenanceMonths[2] == monthAddTwo || maintenanceMonths[2] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[2]) >= 7 && StringToInt(maintenanceMonths[2]) <= 9)
+                                {
+                                    x1 = 440;
+                                    x2 = 620;
+                                }
+                            }
+                            //四個月分圈起的位置(位置4)
+                            else if (maintenanceMonths[3] == monthAddOne || maintenanceMonths[3] == monthAddTwo || maintenanceMonths[3] == monthAddThree)
+                            {
+                                if (StringToInt(maintenanceMonths[3]) >= 10)
+                                {
+                                    x1 = 610;
+                                    x2 = 790;
+                                }
+                            }
+                        }
+                        //表格中圈起保養月及畫刪除線
+                        if (x1 != 0 && x2 != 0)
+                        {
+                            DrowingCircle(false, workBook, workSheet, i, x1, x2, 0);
+                        }
+                        else if (workSheet.GetRow(i).GetCell(6).ToString() != ""
+                                && workSheet.GetRow(i).GetCell(6).ToString() != "1~12")
+                        {
+                            DrowingLine(workSheet, i);
+                        }
+                        if (workSheet.GetRow(i).GetCell(6).ToString() != "")
+                            SetCellStyle(workBook, workSheet, i);
+                    }
+
+                    //抓取表單的名子
+                    string[] formName = workSheet.SheetName.Split('-');
+                    /*
+                    //文坦讀孔機
+                    if (formName[0] == "G18")
+                    {
+                        MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
+                        //For G18
+                        DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
+                    }
+                    //PLASMA
+                    else if (formName[0] == "G26")
+                    {
+                        MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
+                        MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
+                        //For G26
+                        DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                        DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
+                    }
+                    */
+                    SetPrintStyle(workSheet);
+                    file = new FileStream(dirPathNewFolder + "後三月預保養表.xls", FileMode.Create, FileAccess.Write);
+                    workBook.Write(file, true);
+                    file.Close();
                 }
+                Console.WriteLine(GetFileName(file.Name) + "寫入成功");
+                workBook.Close();
             }
             catch (Exception ex)
             {

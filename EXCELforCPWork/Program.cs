@@ -48,8 +48,8 @@ namespace EXCELforCPWork
         }
         static void DoMaintenanceFormExcelFile(string dirPath, string dirPathNewFolder, DateTime date, string month)
         {
-            try
-            {
+            //try
+            //{
                 //開啟Excel 2003檔案
                 FileInfo directoryGFile = new FileInfo(dirPath + "G01~G26-設備定期保養項目表.xls"); ;
                 FileInfo[] directoryAFiles = new FileInfo[] { };
@@ -69,7 +69,7 @@ namespace EXCELforCPWork
                 //獲取下個月份第一日
                 DateTime nextMonthFirstDay;
                 NextMonthFirstDay(date, out nextMonthFirstDay);
-
+                /*
                 //複製檔案
                 if (!File.Exists(dirPathNewFolder + directoryGFile.Name))
                 {
@@ -81,15 +81,44 @@ namespace EXCELforCPWork
                     copyFile.Close();
                     copyWorkBook.Close();
                     Console.WriteLine("檔案複製成功");
-                    */
-                    CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
+                    
+                CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
                     Console.WriteLine("檔案複製成功");
                 }
-
-                FileStream file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.Open, FileAccess.Read);
+                */
+                //讀取原始檔
+                FileStream file = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
                 IWorkbook workBook = new HSSFWorkbook(file);
                 file.Close();
-                ICellStyle cellStyle = workBook.CreateCellStyle();
+
+            //複製Sheet文坦，並放到正確位置
+            for (int i = 1; i <= 3; i++)
+            {
+                int machineCode = 18 + i;
+                ISheet newWorkSheet = workBook.CloneSheet(13);
+                workBook.SetSheetName(workBook.NumberOfSheets - 1, "G" + machineCode.ToString() + "- 文坦");
+                workBook.SetSheetOrder("G" + machineCode.ToString() + "- 文坦", 13 + i);
+            }
+            //複製Sheet PLASMA，並放到正確位置
+            for (int i = 2; i <= 3; i++)
+            {
+                int machineCode = 26 + i;
+                if (machineCode != 27)
+                {
+                    ISheet newWorkSheet = workBook.CloneSheet(20);
+                    workBook.SetSheetName(workBook.NumberOfSheets - 1, "G" + machineCode.ToString() + "- PLASMA");
+                    workBook.SetSheetOrder("G" + machineCode.ToString() + "- PLASMA", 20 + i -1);
+                }
+            }
+            file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            workBook.Write(file, true);
+            file.Close();
+
+            file = new FileStream(dirPathNewFolder + "後三月預保養表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            workBook.Write(file, true);
+            file.Close();
+
+            ICellStyle cellStyle = workBook.CreateCellStyle();
                 //置中的Style
                 cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                 cellStyle.VerticalAlignment = VerticalAlignment.Center;
@@ -344,9 +373,12 @@ namespace EXCELforCPWork
                                 DoForm_A02ToA06(dirPath, dirPathNewFolder, directoryAFiles, executionDate, "G13", "雷射孔微蝕#2");
                             }
                             break;
-                        //文坦讀孔機，第2個星期日保
+                        //文坦讀孔機，第2個星期二保
                         case "G18":
-                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Sunday");
+                    case "G19":
+                    case "G20":
+                    case "G21":
+                        executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Tuesday");
                             break;
                         //水11，第1個星期二保
                         case "G24":
@@ -380,34 +412,20 @@ namespace EXCELforCPWork
                             break;
                         //PLASMA，第2個星期五保
                         case "G26":
-                            executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
+                    case "G28":
+                    case "G29":
+                        executionDate = DateToWeekDay(monthFirstDay, daysOfMonth, 2, "Friday");
                             break;
                     }
 
                     //填入執行日期
                     workSheet.GetRow(1).GetCell(8).SetCellValue(executionDate[0].ToString("yyyy   /    M    /    d"));
                     workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
-                    /*
-                    //文坦讀孔機
-                    if (formName[0] == "G18")
-                    {
-                        MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
-                        //For G18
-                        DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
-                    }
-                    //PLASMA
-                    else if (formName[0] == "G26")
-                    {
-                        MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
-                        //For G26
-                        DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
-                        DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
-                    }
-                    */
-                    SetPrintStyle(workSheet);
+
+                //圈取設備代碼
+                CircleMachineCode(formName[0], workBook, workSheet);
+
+                SetPrintStyle(workSheet);
                     workSheet.GetRow(0).CreateCell(25).SetAsActiveCell();
                     workBook.SetActiveSheet(0);
                     file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
@@ -418,10 +436,43 @@ namespace EXCELforCPWork
 
                 Console.WriteLine(GetFileName(file.Name) + "寫入成功");
                 workBook.Close();
-            }
-            catch (Exception ex)
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
+            //}
+        }
+        static void CircleMachineCode(string machineCode, IWorkbook workBook, ISheet workSheet)
+        {
+            //圈取設備代碼
+            switch (machineCode)
             {
-                Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
+                //文坦讀孔機
+                case "G18":
+                    DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
+                    break;
+                case "G19":
+                    DrowingCircle(false, workBook, workSheet, 28, 640, 940, 19);
+                    break;
+                case "G20":
+                    DrowingCircle(false, workBook, workSheet, 28, 8, 238, 20);
+                    break;
+                case "G21":
+                    DrowingCircle(false, workBook, workSheet, 28, 310, 540, 21);
+                    break;
+                //PLASMA
+                case "G26":
+                    DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
+                    DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
+                    break;
+                case "G28":
+                    DrowingCircle(false, workBook, workSheet, 28, 398, 625, 28);
+                    DrowingCircle(false, workBook, workSheet, 1, 324, 380, 28);
+                    break;
+                case "G29":
+                    DrowingCircle(false, workBook, workSheet, 28, 702, 932, 29);
+                    DrowingCircle(false, workBook, workSheet, 1, 373, 428, 29);
+                    break;
             }
         }
         static void CopyFile(string sourceFile, string destinationFolder, FileInfo directoryFile)
@@ -865,7 +916,7 @@ namespace EXCELforCPWork
             try
             {
                 //開啟Excel 2003檔案
-                FileInfo directoryGFile = new FileInfo(dirPath + "G01~G26-設備定期保養項目表.xls"); ;
+                FileInfo directoryGFile = new FileInfo(dirPathNewFolder + "後三月預保養表.xls"); ;
                 FileInfo[] directoryAFiles = new FileInfo[] { };
                 if (Directory.Exists(dirPath))
                 {
@@ -882,7 +933,7 @@ namespace EXCELforCPWork
                 //獲取下個月份第一日
                 DateTime nextMonthFirstDay;
                 NextMonthFirstDay(date, out nextMonthFirstDay);
-
+                /*
                 //複製檔案
                 if (!File.Exists(dirPathNewFolder + "後三月預保養表.xls"))
                 {
@@ -894,12 +945,12 @@ namespace EXCELforCPWork
                     copyFile.Close();
                     copyWorkBook.Close();
                     Console.WriteLine("檔案複製成功");
-                    */
+                    
                     CopyFile(directoryGFile.FullName, dirPathNewFolder, directoryGFile);
                     Console.WriteLine("檔案複製成功");
                 }
-
-                FileStream file = new FileStream(dirPathNewFolder + directoryGFile.Name, FileMode.Open, FileAccess.Read);
+                */
+                FileStream file = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
                 IWorkbook workBook = new HSSFWorkbook(file);
                 file.Close();
                 HSSFSimpleShape circle1;
@@ -1051,26 +1102,9 @@ namespace EXCELforCPWork
 
                     //抓取表單的名子
                     string[] formName = workSheet.SheetName.Split('-');
-                    /*
-                    //文坦讀孔機
-                    if (formName[0] == "G18")
-                    {
-                        MachineCodeDrowingCircle("G19", 640, 940, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G20", 8, 238, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G21", 310, 540, workBook, workSheet, file);
-                        //For G18
-                        DrowingCircle(false, workBook, workSheet, 28, 250, 550, 18);
-                    }
-                    //PLASMA
-                    else if (formName[0] == "G26")
-                    {
-                        MachineCodeDrowingCircle("G28", 398, 625, workBook, workSheet, file);
-                        MachineCodeDrowingCircle("G29", 702, 932, workBook, workSheet, file);
-                        //For G26
-                        DrowingCircle(false, workBook, workSheet, 28, 99, 328, 26);
-                        DrowingCircle(false, workBook, workSheet, 1, 275, 332, 26);
-                    }
-                    */
+                    //圈取設備代碼
+                    CircleMachineCode(formName[0], workBook, workSheet);
+
                     SetPrintStyle(workSheet);
                     workSheet.GetRow(0).CreateCell(25).SetAsActiveCell();
                     workBook.SetActiveSheet(0);

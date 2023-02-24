@@ -31,10 +31,26 @@ namespace EXCELforCPWork
 
                 //製作保養表及產生相關附件
                 DoMaintenanceFormExcelFile(dirPath, newDirPath, date, month);
+
+                //刪除已製作好的附件內空白的Sheet
+                RemoveBlankExcelSheet(newDirPath);
+
                 //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, newDirPath, date, month);
             }
             Console.ReadLine();
+        }
+        static void RemoveBlankExcelSheet(string newDirPath)
+        {
+            //讀取原始檔
+            FileStream file = new FileStream(newDirPath + "A07~A08電流比對紀錄表.xls", FileMode.Open, FileAccess.Read);
+            IWorkbook workBook = new HSSFWorkbook(file);
+            file.Close();
+            workBook.RemoveSheetAt(0);
+            workBook.RemoveSheetAt(0);            
+            file = new FileStream(newDirPath + "A07~A08電流比對紀錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            workBook.Write(file, true);
+            file.Close();
         }
         static void CreateFolder(string newDirPath)
         {
@@ -69,23 +85,7 @@ namespace EXCELforCPWork
                 //獲取下個月份第一日
                 DateTime nextMonthFirstDay;
                 NextMonthFirstDay(date, out nextMonthFirstDay);
-                /*
                 //複製檔案
-                if (!File.Exists(newDirPath + directoryGFile.Name))
-                {
-                    /*
-                    FileStream copyFile = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
-                    IWorkbook copyWorkBook = new HSSFWorkbook(copyFile);
-                    copyFile = new FileStream(newDirPath + directoryGFile.Name, FileMode.CreateNew, FileAccess.Write);
-                    copyWorkBook.Write(copyFile, true);
-                    copyFile.Close();
-                    copyWorkBook.Close();
-                    Console.WriteLine("檔案複製成功");
-                    
-                CopyFile(directoryGFile.FullName, newDirPath, directoryGFile);
-                    Console.WriteLine("檔案複製成功");
-                }
-                */
                 //讀取原始檔
                 FileStream file = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
                 IWorkbook workBook = new HSSFWorkbook(file);
@@ -332,7 +332,8 @@ namespace EXCELforCPWork
                             if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                             {
                                 nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Monday");
-                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G10", "水8");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G10", "水8A");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G10", "水8B");
                             }
                             break;
                         //水9，第2個星期四保
@@ -362,7 +363,8 @@ namespace EXCELforCPWork
                             if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                             {
                                 nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Wednesday");
-                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G12", "水10");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G12", "水10A");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G12", "水10B");
                             }
                             break;
                         //雷射孔微蝕#2，第3個星期二保
@@ -407,7 +409,8 @@ namespace EXCELforCPWork
                             if (DoCurrentCheckForm(workSheet.GetRow(10).GetCell(6).ToString(), date))
                             {
                                 nextMonthExecutionDate = DateToWeekDay(nextMonthFirstDay, 28, 1, "Friday");
-                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G25", "水12");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G25", "水12A");
+                                DoForm_A07A08(dirPath, newDirPath, directoryAFiles, nextMonthExecutionDate, "G25", "水12B");
                             }
                             break;
                         //PLASMA，第2個星期五保
@@ -738,7 +741,7 @@ namespace EXCELforCPWork
             FileStream file = new FileStream(newDirPath + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             IWorkbook workBook = new HSSFWorkbook(file);
             file.Close();
-            ISheet newWorkSheet, newWorkSheet2;
+            ISheet newWorkSheet;
             if (machineCode == "G07" || machineCode == "G08")
             {
                 newWorkSheet = workBook.CloneSheet(0);
@@ -748,13 +751,7 @@ namespace EXCELforCPWork
             else if (machineCode == "G09" || machineCode == "G10" || machineCode == "G11" || machineCode == "G12" || machineCode == "G24" || machineCode == "G25")
             {
                 newWorkSheet = workBook.CloneSheet(1);
-                if (machineCode == "G10" || machineCode == "G12" || machineCode == "G25")
-                {
-                    workBook.SetSheetName(workBook.NumberOfSheets - 1, lineName + "A");
-                    newWorkSheet2 = workBook.CloneSheet(1);
-                    workBook.SetSheetName(workBook.NumberOfSheets - 1, lineName + "B");
-                }
-                //workBook.SetActiveSheet(workBook.NumberOfSheets - 1);
+                workBook.SetSheetName(workBook.NumberOfSheets - 1, lineName);
             }
             else
             {
@@ -764,9 +761,9 @@ namespace EXCELforCPWork
             file = new FileStream(newDirPath + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             workBook.Write(file, true);
             file.Close();
-            int gridRow = 0, gridColumn = 0, checkBoxIndex = 0, checkBoxIndexA = 0, checkBoxIndexB = 0;
+            int gridRow = 0, gridColumn = 0, checkBoxIndex = 0, checkBoxIndex2 = 0;
             //FOR 水5、水6
-            if (lineName == "水5" || lineName == "水6")
+            if (machineCode == "G07" || machineCode == "G08")
             {
                 gridRow = 1;
                 gridColumn = 15;
@@ -776,10 +773,9 @@ namespace EXCELforCPWork
                     checkBoxIndex = 21;
             }
             //FOR 水7~水12
-            else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
-                     || lineName == "水8" || lineName == "水10" || lineName == "水12")
+            else if (machineCode == "G09" || machineCode == "G10" || machineCode == "G11" || machineCode == "G12" || machineCode == "G24" || machineCode == "G25")
             {
-                gridRow = 1;
+                gridRow = 2;
                 gridColumn = 9;
                 switch (lineName)
                 {
@@ -792,28 +788,35 @@ namespace EXCELforCPWork
                     case "水11":
                         checkBoxIndex = 35;
                         break;
-                    case "水8":
+                    case "水8A":
                         checkBoxIndex = 7;
-                        checkBoxIndexA = 11;
-                        checkBoxIndexB = 14;
+                        checkBoxIndex2 = 11;
                         break;
-                    case "水10":
+                    case "水8B":
+                        checkBoxIndex = 7;
+                        checkBoxIndex2 = 14;
+                        break;
+                    case "水10A":
                         checkBoxIndex = 23;
-                        checkBoxIndexA = 27;
-                        checkBoxIndexB = 30;
+                        checkBoxIndex2 = 27;
                         break;
-                    case "水12":
+                    case "水10B":
+                        checkBoxIndex = 23;
+                        checkBoxIndex2 = 30;
+                        break;
+                    case "水12A":
                         checkBoxIndex = 40;
-                        checkBoxIndexA = 45;
-                        checkBoxIndexB = 48;
+                        checkBoxIndex2 = 45;
+                        break;
+                    case "水12B":
+                        checkBoxIndex = 40;
+                        checkBoxIndex2 = 48;
                         break;
                 }
             }
-            WriteRamdomDataIntoA07A08Form(directoryAFile, newDirPath, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexA);
-            if (lineName == "水8" || lineName == "水10" || lineName == "水12")
-                WriteRamdomDataIntoA07A08Form(directoryAFile, newDirPath,gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndexB);
+            WriteRamdomDataIntoA07A08Form(directoryAFile, newDirPath, gridRow, gridColumn, executionDate[0], lineName, checkBoxIndex, checkBoxIndex2);
         }
-        static void WriteRamdomDataIntoA07A08Form(FileInfo directoryAFile, string newDirPath, int gridRow, int gridColumn, DateTime executionDate, string lineName, int checkBoxIndex, int checkBoxIndexAB)
+        static void WriteRamdomDataIntoA07A08Form(FileInfo directoryAFile, string newDirPath, int gridRow, int gridColumn, DateTime executionDate, string lineName, int checkBoxIndex, int checkBoxIndex2)
         {
             FileStream file = new FileStream(newDirPath + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             IWorkbook workBook = new HSSFWorkbook(file);
@@ -826,7 +829,8 @@ namespace EXCELforCPWork
                 RandomCurrent(workSheet, 300, 500, 18, 5);
             }
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
-                     || lineName == "水8" || lineName == "水10" || lineName == "水12")
+                     || lineName == "水8A" || lineName == "水10A" || lineName == "水12A"
+                     || lineName == "水8B" || lineName == "水10B" || lineName == "水12B")
             {
                 //亂數產生設定電流值後填表，介於540~1450
                 RandomCurrent(workSheet, 540, 1450, 10, 6);
@@ -849,10 +853,11 @@ namespace EXCELforCPWork
             string storageGridLineName = workSheet.GetRow(gridRow).GetCell(0).StringCellValue;
             storageGridLineName = storageGridLineName.Remove(checkBoxIndex, 1);
             storageGridLineName = storageGridLineName.Insert(checkBoxIndex, "R");
-            if (lineName == "水8" || lineName == "水10" || lineName == "水12")
+            if (lineName == "水8A" || lineName == "水10A" || lineName == "水12A"
+                || lineName == "水8B" || lineName == "水10B" || lineName == "水12B")
             {
-                storageGridLineName = storageGridLineName.Remove(checkBoxIndexAB, 1);
-                storageGridLineName = storageGridLineName.Insert(checkBoxIndexAB, "R");
+                storageGridLineName = storageGridLineName.Remove(checkBoxIndex2, 1);
+                storageGridLineName = storageGridLineName.Insert(checkBoxIndex2, "R");
             }
             HSSFRichTextString lineNameToGrid = new HSSFRichTextString(storageGridLineName);
             IFont font = workBook.CreateFont();
@@ -868,7 +873,8 @@ namespace EXCELforCPWork
             }
             //FOR 水7~水12
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
-                     || lineName == "水8" || lineName == "水10" || lineName == "水12")
+                     || lineName == "水8A" || lineName == "水10A" || lineName == "水12A"
+                     || lineName == "水8B" || lineName == "水10B" || lineName == "水12B")
             {
                 lineNameToGrid.ApplyFont(3, 4, font);
                 lineNameToGrid.ApplyFont(19, 20, font);
@@ -885,6 +891,7 @@ namespace EXCELforCPWork
             }
             workSheet.GetRow(gridRow).GetCell(0).SetCellValue(lineNameToGrid);
             SetPrintStyle(workSheet);
+            file = new FileStream(newDirPath + directoryAFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             workBook.Write(file, true);
             Console.WriteLine(GetFileName(file.Name) + "寫入成功");
             file.Close();

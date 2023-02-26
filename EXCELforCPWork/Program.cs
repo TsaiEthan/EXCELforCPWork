@@ -9,10 +9,10 @@ namespace EXCELforCPWork
 {
     internal class Program
     {
-        static int a01Count = 0;
+        static int a01Count = 0, maintenanceCount = 0;
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 3; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string yearMonth = date.ToString("yyyy" + "年" + "MM" + "月");
@@ -56,8 +56,10 @@ namespace EXCELforCPWork
                         workBook.RemoveSheetAt(0);
                     if(workBook.NumberOfSheets == 0)
                         workBook.CreateSheet("此月無需此附件");
+                    workBook.SetActiveSheet(0);
                     file = new FileStream(newDirPath + cunrrentFile, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                     workBook.Write(file, true);
+                    workBook.Close();
                     file.Close();
                 }
             }
@@ -68,8 +70,8 @@ namespace EXCELforCPWork
             if (!Directory.Exists(newDirPath))
             {
                 Directory.CreateDirectory(newDirPath);
-
-                Console.WriteLine(newDirPath + " 資料夾創建成功");
+                string[] folderName = newDirPath.Split(@"\");
+                Console.WriteLine(folderName[folderName.Length - 2] + " 資料夾創建成功");
             }
         }
         static void DoMaintenanceFormExcelFile(string dirPath, string newDirPath, DateTime date, string month)
@@ -186,12 +188,18 @@ namespace EXCELforCPWork
                         string[] maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
                         maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
 
+                        if(workSheet.GetRow(j).GetCell(6).ToString() == "1~12")
+                        {
+                            maintenanceCount++;
+                        }
+
                         //單個月分圈起的位置
                         if (maintenanceMonths.Length == 1 && maintenanceMonths[0] == month)
                         {
                             x1 = 430;
                             x2 = 610;
                             DrowingCircle(true, workBook, workSheet, j, x1, x2, 0);
+                            maintenanceCount++;
                         }
                         else if (maintenanceMonths.Length == 2)
                         {
@@ -239,6 +247,7 @@ namespace EXCELforCPWork
                         if (x1 != 0 && x2 != 0)
                         {
                             DrowingCircle(true, workBook, workSheet, j, x1, x2, 0, out circle1, ref heaterCheck);
+                            maintenanceCount++;
                         }
                         else if (workSheet.GetRow(j).GetCell(6).ToString() != ""
                                 && workSheet.GetRow(j).GetCell(6).ToString() != "1~12")
@@ -452,12 +461,21 @@ namespace EXCELforCPWork
                     workBook.SetActiveSheet(0);
                     file = new FileStream(newDirPath + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                     workBook.Write(file, true);
-
                     file.Close();
                 }
-
                 Console.WriteLine("寫入 " + GetFileName(file.Name) + " 成功");
                 workBook.Close();
+
+                //紀錄保養數量                
+                workBook = new HSSFWorkbook();
+                ISheet recordSheet = workBook.CreateSheet("數量統計");
+                recordSheet.CreateRow(0).CreateCell(0).SetCellValue(maintenanceCount);
+                file = new FileStream(newDirPath + "數量統計.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                workBook.Write(file, true);
+                workBook.Close();
+                file.Close();
+                Console.WriteLine("寫入 " + GetFileName(file.Name) + " 成功");
+                maintenanceCount = 0;
             }
             catch (Exception ex)
             {

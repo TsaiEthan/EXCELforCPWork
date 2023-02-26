@@ -54,6 +54,8 @@ namespace EXCELforCPWork
                         sheetCount = 2;
                     for(int i = 0; i < sheetCount; i++)
                         workBook.RemoveSheetAt(0);
+                    if(workBook.NumberOfSheets == 0)
+                        workBook.CreateSheet("此月無需此附件");
                     file = new FileStream(newDirPath + cunrrentFile, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                     workBook.Write(file, true);
                     file.Close();

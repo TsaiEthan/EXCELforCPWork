@@ -12,7 +12,7 @@ namespace EXCELforCPWork
         static int a01Count = 0, maintenanceCount = 0;
         static void Main(string[] args)
         {
-            for (int monthToAdd = 0; monthToAdd < 3; monthToAdd++)
+            for (int monthToAdd = 0; monthToAdd < 1; monthToAdd++)
             {
                 DateTime date = DateTime.Now.AddMonths(monthToAdd);
                 string yearMonth = date.ToString("yyyy" + "年" + "MM" + "月");
@@ -614,24 +614,43 @@ namespace EXCELforCPWork
                 workBook.SetSheetName(0, lineName);
             }
             newWorkSheet.GetRow(0).GetCell(0).SetCellValue(lineName);
+
             if (lineName == "水8" || lineName == "水10" || lineName == "水12")
             {
                 int j = 1;
                 for (int i = 1; i < executionDate.Count; i++)
                 {
+                    int ramdomCurrentA = 0, ramdomCurrentB = 0, ramdomTemperatureA = 0, ramdomTemperatureB = 0, addTemperature = 3;
+                    //亂數電流，介於540~1480
+                    ramdomCurrentA = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                    ramdomTemperatureA = GetTemperature(ramdomCurrentA);
+                    var random = new Random();
+                    if (random.NextDouble() >= 0.5)
+                    {
+                        ramdomCurrentB = ramdomCurrentA;
+                        ramdomTemperatureB = ramdomTemperatureA;
+                    }
+                    else
+                    {
+                        //亂數電流，介於540~1480
+                        ramdomCurrentB = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                        ramdomTemperatureB = GetTemperature(ramdomCurrentB);
+                    }
+                    if (ramdomTemperatureA == 37)
+                        addTemperature = 2;
                     newWorkSheet.GetRow(j + 1).GetCell(0).SetCellValue(executionDate[i].Year);
                     newWorkSheet.GetRow(j + 1).GetCell(1).SetCellValue(executionDate[i].Month);
                     newWorkSheet.GetRow(j + 1).GetCell(2).SetCellValue(executionDate[i].Day);
                     newWorkSheet.GetRow(j + 1).GetCell(3).SetCellValue(lineName + "A");
-                    newWorkSheet.GetRow(j + 1).GetCell(4).SetCellValue("               A");
-                    newWorkSheet.GetRow(j + 1).GetCell(5).SetCellValue("端子      -     ℃");
+                    newWorkSheet.GetRow(j + 1).GetCell(4).SetCellValue(ramdomCurrentA + " A");
+                    newWorkSheet.GetRow(j + 1).GetCell(5).SetCellValue("端子  " + ramdomTemperatureA + " ~ " + (ramdomTemperatureA + addTemperature) + " ℃");
 
                     newWorkSheet.GetRow(j + 2).GetCell(0).SetCellValue(executionDate[i].Year);
                     newWorkSheet.GetRow(j + 2).GetCell(1).SetCellValue(executionDate[i].Month);
                     newWorkSheet.GetRow(j + 2).GetCell(2).SetCellValue(executionDate[i].Day);
                     newWorkSheet.GetRow(j + 2).GetCell(3).SetCellValue(lineName + "B");
-                    newWorkSheet.GetRow(j + 2).GetCell(4).SetCellValue("               A");
-                    newWorkSheet.GetRow(j + 2).GetCell(5).SetCellValue("端子      -     ℃");
+                    newWorkSheet.GetRow(j + 2).GetCell(4).SetCellValue(ramdomCurrentB + " A");
+                    newWorkSheet.GetRow(j + 2).GetCell(5).SetCellValue("端子  " + ramdomTemperatureB + " ~ " + (ramdomTemperatureB + addTemperature) + " ℃");
                     j = j + 2;
                 }
             }
@@ -639,12 +658,26 @@ namespace EXCELforCPWork
             {
                 for (int i = 1; i < executionDate.Count; i++)
                 {
+                    int ramdomCurrentA = 0, ramdomTemperatureA = 0, addTemperature = 3;
+                    if (lineName == "水5" || lineName == "水6")
+                    {
+                        //亂數電流，介於180~450
+                        ramdomCurrentA = RandomCurrent(newWorkSheet, 180, 450, 0, 0, false);
+                    }
+                    else
+                    {
+                        //亂數電流，介於540~1480
+                        ramdomCurrentA = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                    }
+                    ramdomTemperatureA = GetTemperature(ramdomCurrentA);
+                    if (ramdomTemperatureA == 37)
+                        addTemperature = 2;
                     newWorkSheet.GetRow(i + 1).GetCell(0).SetCellValue(executionDate[i].Year);
                     newWorkSheet.GetRow(i + 1).GetCell(1).SetCellValue(executionDate[i].Month);
                     newWorkSheet.GetRow(i + 1).GetCell(2).SetCellValue(executionDate[i].Day);
                     newWorkSheet.GetRow(i + 1).GetCell(3).SetCellValue(lineName);
-                    newWorkSheet.GetRow(i + 1).GetCell(4).SetCellValue("               A");
-                    newWorkSheet.GetRow(i + 1).GetCell(5).SetCellValue("端子      -     ℃");
+                    newWorkSheet.GetRow(i + 1).GetCell(4).SetCellValue(ramdomCurrentA + " A");
+                    newWorkSheet.GetRow(i + 1).GetCell(5).SetCellValue("端子  " + ramdomTemperatureA + " ~ " + (ramdomTemperatureA + addTemperature) + " ℃");
                 }
             }
 
@@ -656,6 +689,27 @@ namespace EXCELforCPWork
             Console.WriteLine(lineName + " 寫入 " + GetFileName(file.Name) + " 成功");
             workBook.Close();
             file.Close();
+        }
+        static int GetTemperature(int ramdomCurrent)
+        {
+            int temperature = 0;
+            if (ramdomCurrent <= 180)
+                temperature = 30;
+            else if (ramdomCurrent <= 365 && ramdomCurrent > 180)
+                temperature = 31;
+            else if (ramdomCurrent <= 550 && ramdomCurrent > 365)
+                temperature = 32;
+            else if (ramdomCurrent <= 735 && ramdomCurrent > 550)
+                temperature = 33;
+            else if (ramdomCurrent <= 920 && ramdomCurrent > 735)
+                temperature = 34;
+            else if (ramdomCurrent <= 1105 && ramdomCurrent > 920)
+                temperature = 35;
+            else if (ramdomCurrent <= 1290 && ramdomCurrent > 1105)
+                temperature = 36;
+            else if (ramdomCurrent <= 1480 && ramdomCurrent > 1290)
+                temperature = 37;
+            return temperature;
         }
         static void DoForm_A02ToA06(string dirPath, string newDirPath, List<DateTime> executionDate, string machineCode, string lineName)
         {
@@ -841,14 +895,15 @@ namespace EXCELforCPWork
             if (lineName == "水5" || lineName == "水6")
             {
                 //亂數產生設定電流值後填表，介於180~450
-                RandomCurrent(workSheet, 180, 450, 18, 5);
+                RandomCurrent(workSheet, 180, 450, 18, 5, true);
+                
             }
             else if (lineName == "水7" || lineName == "水9" || lineName == "水11"
                      || lineName == "水8A" || lineName == "水10A" || lineName == "水12A"
                      || lineName == "水8B" || lineName == "水10B" || lineName == "水12B")
             {
                 //亂數產生設定電流值後填表，介於540~1480
-                RandomCurrent(workSheet, 540, 1480, 10, 6);
+                RandomCurrent(workSheet, 540, 1480, 10, 6, true);
             }
 
             //填入執行日期
@@ -911,22 +966,26 @@ namespace EXCELforCPWork
             Console.WriteLine(lineName + " 寫入 " + GetFileName(file.Name) + " 成功");
             file.Close();
         }
-        static void RandomCurrent(ISheet workSheet, int minCurrent, int maxCurrent, int forCount, int startRow)
+        static int RandomCurrent(ISheet workSheet, int minCurrent, int maxCurrent, int forCount, int startRow, bool ifA07A08)
         {
             Random randomNumber = new Random(Guid.NewGuid().GetHashCode());
-            //亂數產生設定電流值後填表，介於540~1250
+            //亂數產生設定電流值後填表，介於minCurrent~maxCurrent
             int randomSetCurrent = randomNumber.Next(minCurrent, maxCurrent);
-            for (int i = 3; i <= forCount; i++)
+            if (ifA07A08)
             {
-                workSheet.GetRow(startRow).GetCell(i).SetCellValue(randomSetCurrent + "A");
-                //亂數產生實際電流值，介於(設定電流值的95%)~(設定電流值+2)
-                int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.95), randomSetCurrent + 2);
-                workSheet.GetRow(startRow + 1).GetCell(i).SetCellValue(randomActualCurrent + "A");
-                double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
-                double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;
-                double errorPercent = Math.Round(errorPercentTemp2, 1, MidpointRounding.AwayFromZero);
-                workSheet.GetRow(startRow + 2).GetCell(i).SetCellValue(errorPercent + "%");
+                for (int i = 3; i <= forCount; i++)
+                {
+                    workSheet.GetRow(startRow).GetCell(i).SetCellValue(randomSetCurrent + "A");
+                    //亂數產生實際電流值，介於(設定電流值的96%)~(設定電流值+1)
+                    int randomActualCurrent = randomNumber.Next(Convert.ToInt32(randomSetCurrent * 0.96), randomSetCurrent + 1);
+                    workSheet.GetRow(startRow + 1).GetCell(i).SetCellValue(randomActualCurrent + "A");
+                    double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
+                    double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;
+                    double errorPercent = Math.Round(errorPercentTemp2, 1, MidpointRounding.AwayFromZero);
+                    workSheet.GetRow(startRow + 2).GetCell(i).SetCellValue(errorPercent + "%");
+                }
             }
+            return randomSetCurrent;
         }
         static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string newDirPath, DateTime date, string month)
         {

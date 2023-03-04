@@ -714,51 +714,44 @@ namespace EXCELforCPWork
         static void DoForm_A02ToA06(string dirPath, string newDirPath, List<DateTime> executionDate, string machineCode, string lineName)
         {
             string machineName = "";
-            List<string> newSheetName = new List<string> { };
-            List<int> cloneSheetIndex = new List<int> { };
-            List<int> blockToWriteData = new List<int> { };
+            Dictionary<string, int> cloneSheetIndexs = new Dictionary<string, int> { };
+            Dictionary<string, int> blockToWriteDatas = new Dictionary<string, int> { };
             //FOR VCP
             if (lineName == "水5" || lineName == "水6")
             {
                 machineName = "水平電鍍線(VCP)(" + lineName.Remove(0, 1) + ")線";
-                newSheetName.Add(lineName);
-                cloneSheetIndex.Add(0);
-                blockToWriteData.Add(1);
+                cloneSheetIndexs.Add(lineName, 0);
+                blockToWriteDatas.Add(lineName, 1);
             }
             //FOR SVCP
             else if (lineName == "水7" || lineName == "水8" || lineName == "水9" || lineName == "水10" || lineName == "水11" || lineName == "水12")
             {
                 machineName = "水平電鍍線(SVCP)(" + lineName.Remove(0, 1) + ")線";
-                newSheetName.Add(lineName);
-                cloneSheetIndex.Add(1);
-                blockToWriteData.Add(2);
+                cloneSheetIndexs.Add(lineName, 1);
+                blockToWriteDatas.Add(lineName, 2);
             }
             //FOR PTH
             else if (lineName == "PTH#4" || lineName == "PTH#5" || lineName == "PTH#6")
             {
                 machineName = "水平PTH(" + lineName.Remove(0, 4) + ")線";
-                newSheetName.Add(lineName + "_1");
-                newSheetName.Add(lineName + "_2");
-                cloneSheetIndex.Add(2);
-                cloneSheetIndex.Add(3);
-                blockToWriteData.Add(6);
-                blockToWriteData.Add(2);
+                cloneSheetIndexs.Add(lineName + "_1", 2);
+                cloneSheetIndexs.Add(lineName + "_2", 3);
+                blockToWriteDatas.Add(lineName + "_1", 6);
+                blockToWriteDatas.Add(lineName + "_2", 2);
             }
             //FOR DEBURR#1
             else if (lineName == "DEBURR#1")
             {
                 machineName = "DEBURR(1)線";
-                newSheetName.Add(lineName);
-                cloneSheetIndex.Add(4);
-                blockToWriteData.Add(2);
+                cloneSheetIndexs.Add(lineName, 4);
+                blockToWriteDatas.Add(lineName, 2);
             }
             //FOR 雷射孔微蝕#2
             else if (lineName == "雷射孔微蝕#2")
             {
                 machineName = "雷射孔微蝕(2)線";
-                newSheetName.Add(lineName);
-                cloneSheetIndex.Add(5);
-                blockToWriteData.Add(1);
+                cloneSheetIndexs.Add(lineName, 5);
+                blockToWriteDatas.Add(lineName, 1);
             }
 
             FileStream file;
@@ -766,40 +759,42 @@ namespace EXCELforCPWork
             ISheet newWorkSheet = null;
             if (File.Exists(newDirPath + "A02~A06-設備性能檢測數值記錄表.xls"))
             {
-                for (int i = 0; i < newSheetName.Count; i++)
+                foreach(var sheetIndex in cloneSheetIndexs)
                 {
                     file = new FileStream(newDirPath + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
                     workBook = new HSSFWorkbook(file);
                     file.Close();
-                    newWorkSheet = workBook.CloneSheet(cloneSheetIndex[i]);
-                    workBook.SetSheetName(workBook.NumberOfSheets - 1, newSheetName[i]);
+                    newWorkSheet = workBook.CloneSheet(sheetIndex.Value);
+                    workBook.SetSheetName(workBook.NumberOfSheets - 1, sheetIndex.Key);
 
                     newWorkSheet.GetRow(1).GetCell(0).SetCellValue("設備名稱:  " + machineName);
                     newWorkSheet.GetRow(1).GetCell(8).SetCellValue("檢測日期:" + executionDate[0].ToString("  yyyy   /    M    /   dd"));
 
-                    //填入亂數產生的調整前電流數值
-                    WriteRamdomDataInToA02A06Form(workBook, newSheetName[i], blockToWriteData);
+                    //填入亂數產生的調整前電流數值                    
                     string standerCurrent = "";
                     int row = 5;
-                    int column = 2;
-                    for (int j = 0; j < blockToWriteData[0]; j++)
+                    int column = 1;
+                    for (int j = 0; j < blockToWriteDatas[sheetIndex.Key]; j++)
                     {
                         int ii = j;
-                        if (j >= 4)
+                        if (j >= 3)
                         {
                             row = 15;
                             ii = j - 3;
                         }
                         standerCurrent = newWorkSheet.GetRow(row).GetCell(column + (ii * 3)).StringCellValue.TrimEnd('A');
                         int standerCurrentInt = StringToInt(standerCurrent);
-                        double randomCurrentForAdd = RandomCurrent(newWorkSheet, 1, 29, 0, 0, false) / 10;
+                        //亂數決定增加多少電流，0.5~3.9A
+                        double randomCurrentForAdd = (double)RandomCurrent(newWorkSheet, 5, 39, 0, 0, false) / 10;
+                        double toWriteRandomCurrent = (double)standerCurrentInt + randomCurrentForAdd;
                         for (int k = 0; k < 3; k++)
                         {
-                            newWorkSheet.GetRow(row).GetCell(column + (j * 3) + k).SetCellValue(" A");
+                            //亂數決定增加多少量測誤差電流，-0.1~0.2A
+                            double tolerance = (double)RandomCurrent(newWorkSheet, -1, 2, 0, 0, false) / 10;
+                            //寫入表格，保留至小數第一位
+                            newWorkSheet.GetRow(row + 2).GetCell(column + (ii * 3) + k).SetCellValue((toWriteRandomCurrent + tolerance).ToString("0.0") + " A");
                         }
                     }
-
-
                     SetPrintStyle(newWorkSheet);
 
                     file = new FileStream(newDirPath + "A02~A06-設備性能檢測數值記錄表.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
@@ -809,10 +804,6 @@ namespace EXCELforCPWork
                     Console.WriteLine(lineName + " 寫入 " + GetFileName(file.Name) + " 成功");
                 }
             }            
-        }
-        static void WriteRamdomDataInToA02A06Form(IWorkbook workBook, string newSheetName, List<int> blockToWriteData)
-        {
-
         }
 
         static bool DoCurrentCheckForm(string storageGridWords, DateTime date)

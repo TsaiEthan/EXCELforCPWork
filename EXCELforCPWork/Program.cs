@@ -34,6 +34,9 @@ namespace EXCELforCPWork
 
                 //製作預保養表
                 DoAppointmentMaintenanceFormExcelFile(dirPath, newDirPath, date, month);
+
+                //製作LAYOUT圖(緊急開關、液位開關)
+                DoLayoutFormExcelFile(dirPath, newDirPath, month);
             }
             Console.ReadLine();
         }
@@ -255,7 +258,7 @@ namespace EXCELforCPWork
                             DrowingLine(workSheet, j);
                         }
                         if (workSheet.GetRow(j).GetCell(6).ToString() != "")
-                            SetCellStyle(workBook, workSheet, j);
+                            SetCellStyle(workBook, workSheet, j , 6, 14, 1);
                     }
 
                     //抓取表單的名子
@@ -469,7 +472,12 @@ namespace EXCELforCPWork
                 //紀錄保養數量                
                 workBook = new HSSFWorkbook();
                 ISheet recordSheet = workBook.CreateSheet("數量統計");
-                recordSheet.CreateRow(0).CreateCell(0).SetCellValue(maintenanceCount);
+                recordSheet.CreateRow(0).CreateCell(0).SetCellValue("本月保養數量");
+                //將Column 0，欄寬設定為12
+                recordSheet.SetColumnWidth(0, (int)((12 + 0.71) * 256));
+                SetCellStyle(workBook, recordSheet, 0, 0, 10, 2);
+                recordSheet.GetRow(0).CreateCell(1).SetCellValue(maintenanceCount);
+                SetCellStyle(workBook, recordSheet, 0, 1, 10, 2);
                 file = new FileStream(newDirPath + "數量統計.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 workBook.Write(file, true);
                 workBook.Close();
@@ -563,23 +571,38 @@ namespace EXCELforCPWork
             executionDate[0] = executionDate[whichWeek];
             return executionDate;
         }
-        static void SetCellStyle(IWorkbook workBook, ISheet workSheet, int i)
+        static void SetCellStyle(IWorkbook workBook, ISheet workSheet, int row, int column, int fontHeightInPoints, int allBorder)
         {
             ICellStyle cellStyleOriginal = workBook.CreateCellStyle();
             //置中的Style
             cellStyleOriginal.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
             cellStyleOriginal.VerticalAlignment = VerticalAlignment.Center;
-            //下邊框
-            cellStyleOriginal.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            if(allBorder == 0)
+            {
+                //上邊框
+                cellStyleOriginal.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+                //左邊框
+                cellStyleOriginal.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+                //右邊框
+                cellStyleOriginal.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+                //下邊框
+                cellStyleOriginal.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            }
+            else if(allBorder == 1)
+            {
+                //下邊框
+                cellStyleOriginal.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            }
+
             IFont fontOriginal = workBook.CreateFont();
             //字型
             fontOriginal.FontName = "Times New Roman";
             //字體尺寸
-            fontOriginal.FontHeightInPoints = 14;
+            fontOriginal.FontHeightInPoints = fontHeightInPoints;
             //字體粗體
             fontOriginal.IsBold = false;
             cellStyleOriginal.SetFont(fontOriginal);
-            workSheet.GetRow(i).GetCell(6).CellStyle = cellStyleOriginal;
+            workSheet.GetRow(row).GetCell(column).CellStyle = cellStyleOriginal;
         }
         static void DoForm_A01(string dirPath, string newDirPath, List<DateTime> executionDate, string machineCode, string lineName)
         {
@@ -1183,7 +1206,7 @@ namespace EXCELforCPWork
                             DrowingLine(workSheet, i);
                         }
                         if (workSheet.GetRow(i).GetCell(6).ToString() != "")
-                            SetCellStyle(workBook, workSheet, i);
+                            SetCellStyle(workBook, workSheet, i, 6, 14, 1);
                     }
 
                     //抓取表單的名子
@@ -1204,6 +1227,779 @@ namespace EXCELforCPWork
             catch (Exception ex)
             {
                 Console.WriteLine("Excel檔案開啟出錯：" + ex.Message);
+            }
+        }
+        static void DoLayoutFormExcelFile(string dirPath, string newDirPath, string month)
+        {
+            //開啟Excel 2003檔案
+            FileInfo directoryGFile = null;
+            if (File.Exists(dirPath + "製七部LAYOUT圖(緊急開關、液位開關)A0018656更新.xls"))
+            {
+                directoryGFile = new FileInfo(dirPath + "製七部LAYOUT圖(緊急開關、液位開關)A0018656更新.xls");
+            }
+            //複製檔案
+            //讀取原始檔
+            FileStream file = new FileStream(directoryGFile.FullName, FileMode.Open, FileAccess.Read);
+            IWorkbook workBook = new HSSFWorkbook(file);
+            file.Close();
+            int[] totalDatas = new int[6] { 0, 0, 0, 0, 0, 0 };
+            int[] datas = new int[6] { 0, 0, 0, 0, 0, 0 };
+            for (int i = 0; i < 18; i++)
+            {
+                ISheet workSheet = workBook.GetSheetAt(i);
+                int row = 0;
+                int column = 0;
+                //datas = new int[6] { 0, 0, 0, 0, 0, 0 };
+                switch (workSheet.SheetName)
+                {
+                    case "Desmear#3":
+                        row = 4;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 4;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 11;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 2;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 25;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 4;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 6;
+                                datas[4] = 0;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "Desmear#4":
+                        row = 4;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 5;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 21;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 15;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 6;
+                                datas[4] = 0;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "Desmear#5":
+                        row = 4;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 4;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 21;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 15;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 2;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 6;
+                                datas[4] = 0;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "Deburr#1":
+                        row = 4;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 5;
+                                datas[1] = 0;
+                                datas[2] = 2;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 0;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 2;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "PTH#5":
+                        row = 3;
+                        column = 13;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 4;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 7;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 8;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 3;
+                                datas[1] = 4;
+                                datas[2] = 0;
+                                datas[3] = 13;
+                                datas[4] = 4;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "PTH#6":
+                        row = 5;
+                        column = 13;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 4;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 7;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 4;
+                                datas[2] = 0;
+                                datas[3] = 9;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 3;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 10;
+                                datas[4] = 0;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍五線":
+                        row = 3;
+                        column = 17;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 0;
+                                datas[2] = 3;
+                                datas[3] = 2;
+                                datas[4] = 2;
+                                datas[5] = 1;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 0;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 4;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍六線":
+                        row = 3;
+                        column = 14;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 0;
+                                datas[2] = 3;
+                                datas[3] = 2;
+                                datas[4] = 2;
+                                datas[5] = 1;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 0;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 3;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍七線":
+                        row = 5;
+                        column = 14;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 3;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 1;
+                                datas[4] = 2;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍八線":
+                        row = 2;
+                        column = 17;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 6;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 7;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 2;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 3;
+                                datas[3] = 2;
+                                datas[4] = 0;
+                                datas[5] = 2;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍九線":
+                        row = 2;
+                        column = 20;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 3;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 1;
+                                datas[4] = 2;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍十線":
+                        row = 2;
+                        column = 17;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 6;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 7;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 2;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 3;
+                                datas[3] = 2;
+                                datas[4] = 0;
+                                datas[5] = 2;
+                                break;
+                        }
+                        break;
+                    case "雷燒孔微蝕#2":
+                        row = 2;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 0;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 5;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 0;
+                                datas[3] = 5;
+                                datas[4] = 1;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "2F 讀孔機":
+                        row = 9;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "2":
+                            case "3":
+                            case "4":
+                            case "5":
+                            case "6":
+                            case "7":
+                            case "8":
+                            case "9":
+                            case "10":
+                            case "11":
+                            case "12":
+                                datas[0] = 4;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                        }
+                        break;
+                    case "PTH#4":
+                        row = 2;
+                        column = 11;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 4;
+                                datas[2] = 0;
+                                datas[3] = 9;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 2;
+                                datas[1] = 3;
+                                datas[2] = 0;
+                                datas[3] = 6;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 2;
+                                datas[1] = 2;
+                                datas[2] = 0;
+                                datas[3] = 16;
+                                datas[4] = 4;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍十一線":
+                        row = 2;
+                        column = 17;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 3;
+                                datas[1] = 1;
+                                datas[2] = 3;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 1;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 1;
+                                datas[4] = 2;
+                                datas[5] = 1;
+                                break;
+                        }
+                        break;
+                    case "水平電鍍十二線":
+                        row = 2;
+                        column = 18;
+                        switch (month)
+                        {
+                            case "1":
+                            case "4":
+                            case "7":
+                            case "10":
+                                datas[0] = 6;
+                                datas[1] = 1;
+                                datas[2] = 3;
+                                datas[3] = 3;
+                                datas[4] = 0;
+                                datas[5] = 0;
+                                break;
+                            case "2":
+                            case "5":
+                            case "8":
+                            case "11":
+                                datas[0] = 7;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 0;
+                                datas[4] = 1;
+                                datas[5] = 0;
+                                break;
+                            case "3":
+                            case "6":
+                            case "9":
+                            case "12":
+                                datas[0] = 6;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 2;
+                                datas[4] = 1;
+                                datas[5] = 2;
+                                break;
+                        }
+                        break;
+                    case "2F 烤箱":
+                        row = 4;
+                        column = 10;
+                        switch (month)
+                        {
+                            case "1":
+                            case "2":
+                            case "3":
+                            case "4":
+                            case "5":
+                            case "6":
+                            case "7":
+                            case "8":
+                            case "9":
+                            case "10":
+                            case "11":
+                            case "12":
+                                datas[0] = 8;
+                                datas[1] = 0;
+                                datas[2] = 0;
+                                datas[3] = 2;
+                                datas[4] = 0;
+                                datas[5] = 2;
+                                break;
+                        }
+                        break;
+                }
+                
+                for (int j = 0; j < datas.Length; j++)
+                {
+                    workSheet.GetRow(row + j).GetCell(column).SetCellValue(datas[j]);
+                    SetCellStyle(workBook, workSheet, row + j, column, 12, 2);
+                    totalDatas[j] += datas[j];
+                    workSheet.GetRow(row + j).GetCell(column + 1).SetCellValue(0);
+                    SetCellStyle(workBook, workSheet, row + j, column + 1, 12, 2);
+                }
+                file = new FileStream(newDirPath + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                workBook.Write(file, true);
+                Console.WriteLine(workSheet.SheetName + " 寫入 " + GetFileName(file.Name) + " 成功");
+                file.Close();
+            }
+            workBook.Close();
+            if (File.Exists(newDirPath + "數量統計.xls"))
+            {
+                file = new FileStream(newDirPath + "數量統計.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                workBook = new HSSFWorkbook(file);
+                file.Close();
+                ISheet workSheet = workBook.GetSheet("數量統計");
+
+                for(int k = 0; k < datas.Length; k++)
+                {
+                    string cellString = "";
+                    switch (k)
+                    {
+                        case 0:
+                            cellString = "緊急開關";
+                            break;
+                        case 1:
+                            cellString = "液位浮球";
+                            break;
+                        case 2:
+                            cellString = "液位極棒";
+                            break;
+                        case 3:
+                            cellString = "加熱器";
+                            break;
+                        case 4:
+                            cellString = "機械浮球";
+                            break;
+                        case 5:
+                            cellString = "烘乾段風車";
+                            break;
+                    }
+                    workSheet.CreateRow(2 + k).CreateCell(0).SetCellValue(cellString);
+                    SetCellStyle(workBook, workSheet, 2 + k, 0, 10, 2);
+                    workSheet.GetRow(2 + k).CreateCell(1).SetCellValue(totalDatas[k]);
+                    SetCellStyle(workBook, workSheet, 2 + k, 1, 10, 2);
+                }
+                file = new FileStream(newDirPath + "數量統計.xls", FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                workBook.Write(file, true);
+                file.Close();
+                workBook.Close();
             }
         }
         static void DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber)

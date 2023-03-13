@@ -21,7 +21,7 @@ namespace EXCELforCPWork
                 string newDirPath = dirPath + yearMonth + @"\";
 
                 //產生需要的資料夾
-                CreateFolder(newDirPath);
+                newDirPath = CreateFolder(newDirPath);
                 if (month.Substring(0, 1) == "0")
                     month = month.Remove(0, 1);
 
@@ -67,15 +67,29 @@ namespace EXCELforCPWork
                 }
             }
         }
-        static void CreateFolder(string newDirPath)
+        static string CreateFolder(string newDirPath)
         {
-            //建立資料夾，以月份區分
-            if (!Directory.Exists(newDirPath))
+            string folderNameNewMark = "_N";
+            newDirPath = newDirPath.Remove(newDirPath.Length - 1);            
+            //檢查資料夾是否已被產生過
+            if (Directory.Exists(newDirPath + folderNameNewMark))
             {
-                Directory.CreateDirectory(newDirPath);
-                string[] folderName = newDirPath.Split(@"\");
-                Console.WriteLine(folderName[folderName.Length - 2] + " 資料夾創建成功");
+                DirectoryInfo directoryInfo = new DirectoryInfo(newDirPath + folderNameNewMark);
+                directoryInfo.Delete(true);
             }
+            else if (Directory.Exists(newDirPath))
+            {
+                //不做任何處理
+            }
+            else
+            {
+                folderNameNewMark = "";
+            }
+            //建立資料夾
+            Directory.CreateDirectory(newDirPath + folderNameNewMark);
+            string[] folderName = (newDirPath + folderNameNewMark).Split(@"\");
+            Console.WriteLine(folderName[folderName.Length - 1] + " 資料夾創建成功");
+            return newDirPath + folderNameNewMark + @"\";
         }
         static void DoMaintenanceFormExcelFile(string dirPath, string newDirPath, DateTime date, string month)
         {
@@ -146,22 +160,16 @@ namespace EXCELforCPWork
                 //置中的Style
                 cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                 cellStyle.VerticalAlignment = VerticalAlignment.Center;
+                
                 IFont font = workBook.CreateFont();
                 //字型
                 font.FontName = "Times New Roman";
                 //字體尺寸
-                font.FontHeightInPoints = 16;
+                font.FontHeightInPoints = 14;
                 //字體粗體
-                font.IsBold = true;
+                font.IsBold = false;
                 cellStyle.SetFont(font);
 
-                IFont font2 = workBook.CreateFont();
-                //字型
-                font2.FontName = "Times New Roman";
-                //字體尺寸
-                font2.FontHeightInPoints = 16;
-                //字體粗體
-                font2.IsBold = false;
                 for (int i = 0; i < workBook.NumberOfSheets; i++)
                 {
                     ISheet workSheet = workBook.GetSheetAt(i);
@@ -186,7 +194,9 @@ namespace EXCELforCPWork
                         if (workSheet.GetRow(j).GetCell(4) != null
                             && workSheet.GetRow(j).GetCell(4).ToString() == "感測值≧500")
                         {
-                            workSheet.GetRow(j).GetCell(7).SetCellValue(",");
+                            //亂數填入數值，介於500~999
+                            workSheet.GetRow(j).GetCell(7).SetCellValue(RandomNumber(500, 999) + "  ，  " + RandomNumber(500, 999));
+                            workSheet.GetRow(j).GetCell(7).CellStyle.SetFont(font);
                         }
                         string[] maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
                         maintenanceMonths = workSheet.GetRow(j).GetCell(6).ToString().Split(',');
@@ -454,7 +464,7 @@ namespace EXCELforCPWork
 
                     //填入執行日期
                     workSheet.GetRow(1).GetCell(8).SetCellValue(executionDate[0].ToString("yyyy   /    M    /    d"));
-                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
+                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font);
 
                     //圈取設備代碼
                     CircleMachineCode(formName[0], workBook, workSheet);
@@ -645,7 +655,7 @@ namespace EXCELforCPWork
                 {
                     int ramdomCurrentA = 0, ramdomCurrentB = 0, ramdomTemperatureA = 0, ramdomTemperatureB = 0, addTemperature = 3;
                     //亂數電流，介於540~1480
-                    ramdomCurrentA = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                    ramdomCurrentA = RandomNumber(540, 1480);
                     ramdomTemperatureA = GetTemperature(ramdomCurrentA);
                     var random = new Random();
                     if (random.NextDouble() >= 0.5)
@@ -656,7 +666,7 @@ namespace EXCELforCPWork
                     else
                     {
                         //亂數電流，介於540~1480
-                        ramdomCurrentB = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                        ramdomCurrentB = RandomNumber(540, 1480);
                         ramdomTemperatureB = GetTemperature(ramdomCurrentB);
                     }
                     if (ramdomTemperatureA == 37)
@@ -685,12 +695,12 @@ namespace EXCELforCPWork
                     if (lineName == "水5" || lineName == "水6")
                     {
                         //亂數電流，介於180~450
-                        ramdomCurrentA = RandomCurrent(newWorkSheet, 180, 450, 0, 0, false);
+                        ramdomCurrentA = RandomNumber(180, 450);
                     }
                     else
                     {
                         //亂數電流，介於540~1480
-                        ramdomCurrentA = RandomCurrent(newWorkSheet, 540, 1480, 0, 0, false);
+                        ramdomCurrentA = RandomNumber(540, 1480);
                     }
                     ramdomTemperatureA = GetTemperature(ramdomCurrentA);
                     if (ramdomTemperatureA == 37)
@@ -808,12 +818,12 @@ namespace EXCELforCPWork
                         standerCurrent = newWorkSheet.GetRow(row).GetCell(column + (ii * 3)).StringCellValue.TrimEnd('A');
                         int standerCurrentInt = StringToInt(standerCurrent);
                         //亂數決定增加多少電流，0.5~3.9A
-                        double randomCurrentForAdd = (double)RandomCurrent(newWorkSheet, 5, 39, 0, 0, false) / 10;
+                        double randomCurrentForAdd = (double)RandomNumber(5, 39) / 10;
                         double toWriteRandomCurrent = (double)standerCurrentInt + randomCurrentForAdd;
                         for (int k = 0; k < 3; k++)
                         {
                             //亂數決定增加多少量測誤差電流，-0.1~0.2A
-                            double tolerance = (double)RandomCurrent(newWorkSheet, -1, 2, 0, 0, false) / 10;
+                            double tolerance = (double)RandomNumber(-1, 2) / 10;
                             //寫入表格，保留至小數第一位
                             newWorkSheet.GetRow(row + 2).GetCell(column + (ii * 3) + k).SetCellValue((toWriteRandomCurrent + tolerance).ToString("0.0") + " A");
                         }
@@ -1031,10 +1041,15 @@ namespace EXCELforCPWork
                     double errorPercentTemp = Math.Abs(randomSetCurrent - randomActualCurrent);
                     double errorPercentTemp2 = errorPercentTemp / randomSetCurrent * 100;
                     double errorPercent = Math.Round(errorPercentTemp2, 1, MidpointRounding.AwayFromZero);
-                    workSheet.GetRow(startRow + 2).GetCell(i).SetCellValue(errorPercent + "%");
+                    workSheet.GetRow(startRow + 2).GetCell(i).SetCellValue(errorPercent.ToString("0.0") + "%");
                 }
             }
             return randomSetCurrent;
+        }
+        static int RandomNumber(int minCurrent, int maxCurrent)
+        {
+            ISheet workSheet = null;
+            return RandomCurrent(workSheet, minCurrent, maxCurrent, 0, 0, false);
         }
         static void DoAppointmentMaintenanceFormExcelFile(string dirPath, string newDirPath, DateTime date, string month)
         {
@@ -1067,22 +1082,15 @@ namespace EXCELforCPWork
                 //置中的Style
                 cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
                 cellStyle.VerticalAlignment = VerticalAlignment.Center;
+                
                 IFont font = workBook.CreateFont();
                 //字型
                 font.FontName = "Times New Roman";
                 //字體尺寸
-                font.FontHeightInPoints = 16;
+                font.FontHeightInPoints = 14;
                 //字體粗體
-                font.IsBold = true;
+                font.IsBold = false;
                 cellStyle.SetFont(font);
-
-                IFont font2 = workBook.CreateFont();
-                //字型
-                font2.FontName = "Times New Roman";
-                //字體尺寸
-                font2.FontHeightInPoints = 16;
-                //字體粗體
-                font2.IsBold = false;
 
                 int monthInteger = StringToInt(month);
                 int[] monthAdd = new int[3] { monthInteger + 1, monthInteger + 2, monthInteger + 3 };
@@ -1114,7 +1122,7 @@ namespace EXCELforCPWork
                         lastWorkDate = lastWorkDate.AddDays(-2);
                     }
                     workSheet.GetRow(1).GetCell(8).SetCellValue(lastWorkDate.ToString("yyyy   /    M    /   dd"));
-                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font2);
+                    workSheet.GetRow(1).GetCell(8).CellStyle.SetFont(font);
 
                     for (int i = 3; i < workSheet.LastRowNum - 1; i++)
                     {

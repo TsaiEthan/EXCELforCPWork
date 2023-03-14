@@ -85,11 +85,12 @@ namespace EXCELforCPWork
             {
                 folderNameNewMark = "";
             }
+            newDirPath += folderNameNewMark;
             //建立資料夾
-            Directory.CreateDirectory(newDirPath + folderNameNewMark);
-            string[] folderName = (newDirPath + folderNameNewMark).Split(@"\");
+            Directory.CreateDirectory(newDirPath);
+            string[] folderName = newDirPath.Split(@"\");
             Console.WriteLine(folderName[folderName.Length - 1] + " 資料夾創建成功");
-            return newDirPath + folderNameNewMark + @"\";
+            return newDirPath + @"\";
         }
         static void DoMaintenanceFormExcelFile(string dirPath, string newDirPath, DateTime date, string month)
         {
@@ -1252,12 +1253,14 @@ namespace EXCELforCPWork
             file.Close();
             int[] totalDatas = new int[6] { 0, 0, 0, 0, 0, 0 };
             int[] datas = new int[6] { 0, 0, 0, 0, 0, 0 };
+            int[] index = new int[2] { -1, -1 };
             for (int i = 0; i < 18; i++)
             {
                 ISheet workSheet = workBook.GetSheetAt(i);
                 int row = 0;
                 int column = 0;
                 //datas = new int[6] { 0, 0, 0, 0, 0, 0 };
+                index = FindMaintenanceMonth(workSheet, month);
                 switch (workSheet.SheetName)
                 {
                     case "Desmear#3":
@@ -1957,16 +1960,20 @@ namespace EXCELforCPWork
                 for (int j = 0; j < datas.Length; j++)
                 {
                     workSheet.GetRow(row + j).GetCell(column).SetCellValue(datas[j]);
-                    SetCellStyle(workBook, workSheet, row + j, column, 12, 2);
+                    SetCellStyle(workBook, workSheet, row + j, column, 12, 0);
                     totalDatas[j] += datas[j];
                     workSheet.GetRow(row + j).GetCell(column + 1).SetCellValue(0);
-                    SetCellStyle(workBook, workSheet, row + j, column + 1, 12, 2);
+                    SetCellStyle(workBook, workSheet, row + j, column + 1, 12, 0);
                 }
+
+
                 file = new FileStream(newDirPath + directoryGFile.Name, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 workBook.Write(file, true);
                 Console.WriteLine(workSheet.SheetName + " 寫入 " + GetFileName(file.Name) + " 成功");
                 file.Close();
             }
+            
+            
             workBook.Close();
             if (File.Exists(newDirPath + "數量統計.xls"))
             {
@@ -2009,6 +2016,34 @@ namespace EXCELforCPWork
                 file.Close();
                 workBook.Close();
             }
+        }
+        static int[] FindMaintenanceMonth(ISheet workSheet, String month)
+        {            
+            if (workSheet == null)
+                return null;
+
+            string xXx = "";
+            //index[0] = rowIndex, index[1] = columnIndex
+            int[] index = new int[2] {-1, -1};
+
+            for (int r = 0; r < workSheet.PhysicalNumberOfRows; r++)
+            {
+                IRow row = workSheet.GetRow(r);
+                if (row == null || row.Cells.Count == 0)
+                    continue;
+                for (int c = 0; c < row.Cells.Count; c++)
+                {
+                    //xXx = row.Cells[c].StringCellValue;
+                    if (row.Cells[c].CellType == CellType.String && row.Cells[c].StringCellValue == "3.6.9.12月檢查")
+                    {
+                        index[0] = r;
+                        index[1] = row.Cells[c].ColumnIndex;
+                        break;
+                    }
+                }
+            }
+
+            return index;
         }
         static void DrowingCircle(bool Maintenance, IWorkbook workBook, ISheet workSheet, int i, int x1, int x2, int machineCodeNumber)
         {
